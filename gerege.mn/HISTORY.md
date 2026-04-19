@@ -99,6 +99,36 @@ The field NAME is unchanged for backwards-compat with consumers; only the value 
 
 **Watch out:** This means any subsystem with a Service-clients grant on rp.gerege.mn can call backend operations. The trust radius now encompasses the entire X-Road approval flow + nginx IP gate. If the IP gate is ever misconfigured (e.g. allows wider than rp.gerege.mn's IP), an attacker who can spoof the X-Gerege-SS-Token header would gain access. The shared token MUST stay secret + the IP gate MUST stay tight.
 
+## 2026-04-19 — Cookie + Bearer dual-mode session auth on /web/*
+
+`/web/*` endpoints now sit behind `WebSessionAuth` middleware (`eid-gerege-backend` commit 1d4986e). Browser flows receive an HttpOnly + Secure + SameSite=Lax cookie (`gid_sess`); native clients (Windows .NET, macOS Swift) receive the same opaque token in JSON via `POST /web/auth/session/:id/token` and send it as `Authorization: Bearer …`. Single Redis-backed session store, 1h rolling TTL.
+
+Closes the IDOR vulnerability that let any caller read user data by passing `?user_id=<national_id>` in the URL. All `?user_id=` query params and `user_national_id` body fields removed end-to-end; dashboard/org/cloud routes now derive identity from the session token alone.
+
+Pattern matches e-Estonia (TARA), island.is (Duende BFF), Suomi.fi, NemLog-in (MitID), BankID — every peer national-eID portal uses HttpOnly cookies + per-platform secret store, never JWT-in-localStorage. See `eid-gerege-backend/internal/middleware/web_session.go` and `desktop-apps/{macos,windows}-app/`. Auth-related code commits: 1d4986e (backend + web + desktop).
+
+## 2026-04-19 — gerege-ocsp cache dropped — re-sign every request
+
+Earlier this evening every-X-Road-call started failing with `Security server has no authentication certificate / clientproxy.ssl_authentication_failed` after roughly an hour of inactivity. Same incident hit Anicar Tasker subsystem registration earlier in the day, and mgmt SS the day before. Root cause finally diagnosed and committed (33f04ab on `gerege-mn-eid`):
+
+`gerege-ocsp` had an in-memory LRU cache with `OCSP_CACHE_TTL_HOURS=4`. Cached responses had `thisUpdate` frozen at insert time. X-Road consumers' default freshness window is 3600s — so any cached response > 1h old was rejected by every consumer-side `OcspVerifier.verifyValidity` call, breaking SS-to-SS mTLS handshakes.
+
+Fix: dropped the in-memory cache lookup entirely in `gerege-ocsp/internal/ocsp/responder.go::HandleRequest`. Every request now re-signs with `thisUpdate=now`. ECDSA P-256 sign is sub-millisecond; trivial vs the X-Road call latency budget.
+
+`OCSP_CACHE_TTL_HOURS` env var is now dead config — only feeds the `nextUpdate` field, no caching happens. Future cleanup pass should remove the unused `cache` field and env var.
+
+**Watch out (deprecated):** the operational dance `docker restart gerege-ocsp + systemctl restart xroad-signer` no longer needed. If "OCSP response is too old" recurs, the bug is probably in xroad-signer's own refresh schedule — not in our responder.
+
+## 2026-04-19 — TSA cert fingerprint pinned + device HMAC key rotation backend
+
+Two mobile-security improvements landed (commits 013b742 backend + d7894be docs):
+
+- **TSA fingerprint pin** — `TSA_CERT_FINGERPRINT=be6e60c500aad60eda59ce3da3164305da622e5c058f69c60c7461a0221b7829` set in `.env`. The validator in `eid-gerege-backend/internal/tsa/client.go` now enforces fingerprint match instead of the previous warn-and-continue. Every leaf rotation (annual via `renew-leaf.sh`) MUST update this env value — see `timeserver.mn/HISTORY.md`.
+
+- **Device HMAC key rotation** — `POST /mobile/device/rotate-key` accepts old-HMAC-signed request with new key in body, atomic UPDATE. Migration `014_device_key_rotation.sql` adds `key_rotated_at` column. Mobile-side flow (60-day cadence, Secure Enclave key gen, atomic local swap) designed but TODO — see `docs/mobile-security-roadmap.md`.
+
+Two more designs await mobile build cycles: TLS cert pinning (recommend ISRG Root X1 + X2 SPKI dual-pin) and biometric-bound step-up auth on sign (Secure Enclave P-256, ECDSA over server-issued nonce).
+
 ## Watch list for the next operator
 
 - **Root CA private key** is on disk at `/opt/gerege-mn-eid/eid-gerege-backend/config/pki/root-ca.key` and used only to sign new intermediate CAs. Move to offline storage when not actively in use; never commit.
