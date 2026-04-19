@@ -1,0 +1,29 @@
+[Unit]
+Description=Sigstore Timestamp Authority
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/timestamp-server serve   --host=127.0.0.1   --port=3004   --timestamp-signer=file   --file-signer-key-path=/opt/tsa-certs/leaf-key.pem   --certificate-chain-path=/opt/tsa-certs/certchain.pem   --ntp-monitoring=/opt/tsa-certs/ntpsync.yaml   --disable-ntp-monitoring=false   --log-type=prod   --read-timeout=30s   --write-timeout=30s   --max-request-body-size=65536
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+# Security hardening
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+
+[Install]
+WantedBy=multi-user.target
+
+# /etc/systemd/system/timestamp-authority.service.d/limits.conf
+[Service]
+MemoryMax=512M
+MemoryHigh=384M
+CPUQuota=50%

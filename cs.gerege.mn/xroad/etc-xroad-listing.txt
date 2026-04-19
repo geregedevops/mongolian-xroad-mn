@@ -1,0 +1,11 @@
+backup.d
+conf.d
+configuration-parts
+db.properties
+devices.ini
+globalconf
+gpghome
+nginx
+services
+signer
+ssl

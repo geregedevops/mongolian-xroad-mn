@@ -1,0 +1,6 @@
+*.key
+*.pem.bak.*
+**/*.bak
+**/*.bak.*
+.env
+.DS_Store

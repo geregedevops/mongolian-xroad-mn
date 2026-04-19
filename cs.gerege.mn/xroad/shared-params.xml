@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns3:conf xmlns:ns2="http://x-road.eu/xsd/identifiers" xmlns:ns3="http://x-road.eu/xsd/xroad.xsd">
+    <instanceIdentifier>MN</instanceIdentifier>
+    <source>
+        <address>cs.gerege.mn</address>
+        <internalVerificationCert>MIIC2DCCAcCgAwIBAgIBATANBgkqhkiG9w0BAQ0FADAdMRswGQYDVQQDDBJpbnRlcm5hbFNpZ25pbmdLZXkwHhcNNzAwMTAxMDAwMDAwWhcNMzgwMTAxMDAwMDAwWjAdMRswGQYDVQQDDBJpbnRlcm5hbFNpZ25pbmdLZXkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCrE8HEAXheDbdNstMJ2j/oWgdCm9SsqoX/FFgEfqAV6S/t7SBjhUteRZsZfRz5LzlHW0vw0+/ZPer/HsNq3jkwT8b3kHnhzeOaP3yOKdqYeDSfFGDmEMHdrudnuPoHVkeiEa+f7wZCAAKYZOgcbChuD+w7ksKr6Re6oqR+1h9tHIiP2ussEQU4QcLOmCdJx3k6UNJ05rCx0A+xcWqADmfJkQbNay1T4BvHEujWhvQb/0TYBb4BwzIJ7UtPz7vg90v9GHZ+u5xVHmD2wg4euY2/GbE1vhsLnb/i0pZcMJLe0PLjhG7ZjRQ82BIPp4IQjeT22UcrSaY+LcXs6ogJaUT5AgMBAAGjIzAhMA4GA1UdDwEB/wQEAwICRDAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBDQUAA4IBAQCIbFpaJLpaESN/lQxbgxAgXPTJAEg2yho4N5ZOQt7Cp/O1Xb+DZqWmA5EAEqM4AxVA8easQWW0j8+NXqNEprBbeYwRxccAiajXlnU94ZYom2SliyZ/auLvFVPQe2aF+4fYfqmMrq2wzixIGEndHechgkheOMghGwsP71+D01R4EfwqBzndX3zXSpdPlydy+kPPKZ8D0ot3A7s+YXKSQ2PHXq1LmkcfPQ2TI+2DiNjSUkYQxg3796V5QABFCJMzfKmpJC4loorP6Mwcx96Kq01j9wmbnmGPuEuJLNDytWlymXZ7HXScgcV++tJjfYYTlniPsc1kyvWP82ib8uWVFOWu</internalVerificationCert>
+        <internalVerificationCert>MIIC2DCCAcCgAwIBAgIBATANBgkqhkiG9w0BAQ0FADAdMRswGQYDVQQDDBJpbnRlcm5hbFNpZ25pbmdLZXkwHhcNNzAwMTAxMDAwMDAwWhcNMzgwMTAxMDAwMDAwWjAdMRswGQYDVQQDDBJpbnRlcm5hbFNpZ25pbmdLZXkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDqzwOKPyDajmrG7a8n1VsdvEgWXz5lLW+gyWwvuJ5cRvFFafhfASGufvE+FpK/2En8sunBdU1EV0NyusHtXl00v+m3a5zHyz0I0BK8PR3ONRi2Jk1y+2Agap6zRSy5HJKhLHs/WXic3JZ5uR7kl56vxXh5jieimuXVBPfjIShbVNzI1vND+l+R58sHBRt0/TpsayAGS0iIMItLCjyl9YMW/q20ivvtia21nX4vPj42OTyhTb4Z4cKNMAX5Do8FsKzK7cfcj4hbD9497cVH3bN2IfsIfBqiVPiL+N/C0xeyE/CisxRMA6SrsKvNDUXI6oJ1T8RTcHzS/gXmT4BWAT0bAgMBAAGjIzAhMA4GA1UdDwEB/wQEAwICRDAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBDQUAA4IBAQCS1yygPIWxmoNZDMO8JhPjXLpVh9PKNGP2cqmCp7htJ8RXPPiOP0tK+awubWO43rM+MFqTMQPMV84X4BIJ8FTUed4Pa3DrnTwGKYZ/7t1PDNg4JKJINL9agW4t2MTHbvSQATNJkLgJegmHIiV/b1sdXnex3sqp4BdmLLqC0EJtipoOEJSQYxoxm5TSw+776bKwd2HT/EWBHWdAMNGqy64vftVQUOuribc4mvsclNZJrSLutcTI4c7dgK/hfWByaw/VLu8+Snocwjfj+ood2GwuBRpOSTY2cjPJmxN7HEXoFMaIeydYJg0gSX5SxBLqzb8TLii5i9OgHueMGW0bP91P</internalVerificationCert>
+        <externalVerificationCert>MIIC2DCCAcCgAwIBAgIBATANBgkqhkiG9w0BAQ0FADAdMRswGQYDVQQDDBJleHRlcm5hbFNpZ25pbmdLZXkwHhcNNzAwMTAxMDAwMDAwWhcNMzgwMTAxMDAwMDAwWjAdMRswGQYDVQQDDBJleHRlcm5hbFNpZ25pbmdLZXkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCOhgTxb3sVj/qVxM25Q7xg7+xJH2YzM/U9nE48qjCvp6UBxDR3SqepGbS3EY2E4IjsrQB+Pa3l7umQXgoNzACFGEbTl2oHRCMASoru/xHFv23TUVAFDvt2ujaTlGZDFG9a8fJCH3+TORX66dGz3y8nYcCnPNhxsCZoiO6Lc25riIG/APfJFFQLzdD43M3f4XqgbF5NwxmXqpuX00GJ2yAtSTqaHNKwN8ElXaMXTJpwiuteDrVqExaV1SsjxCfYYSKy9s9ambxFJvUOf8pATqfaOZJvMb+iMhu3QjuUHuNsj9Kiv9nUFnlnMb8hG/xMqWPZoJ6p5W/1lcnZOrkkJsyzAgMBAAGjIzAhMA4GA1UdDwEB/wQEAwICRDAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBDQUAA4IBAQBQ8/VrHx/0mJCQMDgNWKlJnNqUkDunl9JokLLYlHYePZ9602S2joCRRfgPm3c9ZSkr9ZUJKWg0zMFXs/5LaTSV5CIjpbxZtvBYLEi5vLmiKbTBOTR/NSaeSolIfgALkVayr0oCU0f/4kqVjEKJl+uN+C98z8YDC4nCgJuqDplJziKBHhlmDd7fPKYqD+bPDA9kE46loSZj+zh/XgW7BjhNpVj+Sxnwcu3Tvklo0jPHdElSfbATgOmudcXP2nEbHxEvIKEim5xnlzYINHGLeL0BSL3ZHW7MZ9PXoMy0TM3W+OyjZZk73D0quaOXR/nty9X5OntT5WytBAEP3tLiTj8r</externalVerificationCert>
+        <externalVerificationCert>MIIC2DCCAcCgAwIBAgIBATANBgkqhkiG9w0BAQ0FADAdMRswGQYDVQQDDBJleHRlcm5hbFNpZ25pbmdLZXkwHhcNNzAwMTAxMDAwMDAwWhcNMzgwMTAxMDAwMDAwWjAdMRswGQYDVQQDDBJleHRlcm5hbFNpZ25pbmdLZXkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDGyloyKL9uo3r0TW6RhANdCkZJdqUypt/RZ2HPpZpfn3cIrPiGq8WJT5ZYRk6SMFY61V3i2nT3ZFHUXuiJQWpYP0eKDPCWByuCJdsANSAyxj+SHAEwPhCvoDu3YGS+JTdviGrw7aXpnTelgrWH2xVNIqqP0/uBY57EKRtpMhf6Vt6m/aFy9nI7P5kY28tOt7y3AP2DUfAGlKhWjIJ2qi/VbhRXO6SprtSqGkpbicd/bOvYBzl19l/CLvdihhoEkI/ARlglrCaxwzUpn9qvizcighN9rf8U+2dqtLfi/mKDBVjspNcaFruS/K7JHuVd1nF2J5SVO5J7eHMCID6+k6mPAgMBAAGjIzAhMA4GA1UdDwEB/wQEAwICRDAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBDQUAA4IBAQBmFcy98VThFOVxZXdNmNxl133ecQS/YrL8Rcfi0PXQXukdlI7CAqWT+FQGznJUg8Exk0NU7MK1KhiEOHjaakOSyQZcBao9DQaDzaXQzoonLEZBXwLQI9UUNawlpqs2LpH116bUhCtemRVaRwC7+NWdkm00wwvUsQLrJNndiP+XFmJahvbHvq7PDVU3EoGQvxutXy89rjdplwQtHNrQK/2GWyF7PsCnXcNqrjJmhMZusbMZdqpxNUF/LpoEXWgTLhXWeu4qfTSTGcCG7mEMvpRRIqmzj+KlE91/TnhoEMmns1cVciQnfdbh9svZftMhVskjdT0njW1isyAz2xfhlPK8</externalVerificationCert>
+    </source>
+    <approvedCA>
+        <name>Gerege Issuing CA</name>
+        <authenticationOnly>false</authenticationOnly>
+        <topCA>
+            <cert>LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUI4RENDQVplZ0F3SUJBZ0lVTmZYRTVuY1pHNFpqVVptakRMTGhpL0k0djBvd0NnWUlLb1pJemowRUF3SXcKUXpFTE1Ba0dBMVVFQmhNQ1RVNHhHekFaQmdOVkJBb01Fa2RsY21WblpTQlRlWE4wWlcxeklFeE1RekVYTUJVRwpBMVVFQXd3T1IyVnlaV2RsSUZKdmIzUWdRMEV3SGhjTk1qWXdOREV5TURZeE5qUXhXaGNOTXpFd05ERXhNRFl4Ck5qUXhXakJHTVFzd0NRWURWUVFHRXdKTlRqRWJNQmtHQTFVRUNnd1NSMlZ5WldkbElGTjVjM1JsYlhNZ1RFeEQKTVJvd0dBWURWUVFEREJGSFpYSmxaMlVnU1hOemRXbHVaeUJEUVRCWk1CTUdCeXFHU000OUFnRUdDQ3FHU000OQpBd0VIQTBJQUJGSEJPQUk5c0tvd3BjM3NJWlYwcC8xeUF6SUx2Y3dBU25GRjZMNGtmY3l0RWdHR2N3eXVycEFnCitIOVZ5MTFUYzk1YmhyTzRzVEpMSkdJSHhtakVJMmFqWmpCa01CSUdBMVVkRXdFQi93UUlNQVlCQWY4Q0FRQXcKRGdZRFZSMFBBUUgvQkFRREFnRUdNQjBHQTFVZERnUVdCQlRsdlZacSthWmVhLzFmQytnNm9EdUFOVTErSGpBZgpCZ05WSFNNRUdEQVdnQlNlcEYrTjZaaktkdXZPTjFuOWkyM01PT0JJM0RBS0JnZ3Foa2pPUFFRREFnTkhBREJFCkFpQTFHNVpWUk85TkxsZS96aFZNb3RkM2FyK0FEY2FyWUFoNGRtUUxWVlkvOHdJZ2JRbm9LVXJzTkNkTVB4eTgKYVM4d0pjUUxtVWMzeTJnU2JQY3JrTFd2ZXdjPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==</cert>
+            <ocsp>
+                <url>https://ocsp.gerege.mn/ocsp</url>
+                <cert>LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNGekNDQWIyZ0F3SUJBZ0lVSjBKcFpjVVVkd21Ld21iaXRHWWFkaE15eFpjd0NnWUlLb1pJemowRUF3SXcKUmpFTE1Ba0dBMVVFQmhNQ1RVNHhHekFaQmdOVkJBb01Fa2RsY21WblpTQlRlWE4wWlcxeklFeE1RekVhTUJnRwpBMVVFQXd3UlIyVnlaV2RsSUVsemMzVnBibWNnUTBFd0hoY05Nall3TkRFeU1EWXhOalF4V2hjTk1qY3dOREV5Ck1EWXhOalF4V2pCS01Rc3dDUVlEVlFRR0V3Sk5UakViTUJrR0ExVUVDZ3dTUjJWeVpXZGxJRk41YzNSbGJYTWcKVEV4RE1SNHdIQVlEVlFRRERCVkhaWEpsWjJVZ1QwTlRVQ0JTWlhOd2IyNWtaWEl3V1RBVEJnY3Foa2pPUFFJQgpCZ2dxaGtqT1BRTUJCd05DQUFUWnoveWhnSEUrdEZ1YlAzWGR5OWgrS29jSlFndk81Y0NPekZPWnJ2RW9tRU9MCnpKd1FKcE9LOFJGTEJBM0RORE9NTDFKVStqRlVBZXA0YStzbHRabXVvNEdFTUlHQk1Ba0dBMVVkRXdRQ01BQXcKRGdZRFZSMFBBUUgvQkFRREFnZUFNQk1HQTFVZEpRUU1NQW9HQ0NzR0FRVUZCd01KTUIwR0ExVWREZ1FXQkJSLworWXJxYW55NkZXcjhFckREWkowZTRBMjdrREFmQmdOVkhTTUVHREFXZ0JUbHZWWnErYVplYS8xZkMrZzZvRHVBCk5VMStIakFQQmdrckJnRUZCUWN3QVFVRUFnVUFNQW9HQ0NxR1NNNDlCQU1DQTBnQU1FVUNJUUR4RmFVNG51MzcKaVVhL2daN25xQmZ2M0t0aFZoM2NiUy9TSTRWVVhoUkVLd0lnVWxQSDQyT3NlVnJaUnhBVWV6Y29jYTVuNWtSSApBMnZYUFppcDk3dVcvWFk9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K</cert>
+                <costType>FREE</costType>
+            </ocsp>
+        </topCA>
+        <certificateProfileInfo>ee.ria.xroad.common.certificateprofile.impl.BasicCertificateProfileInfoProvider</certificateProfileInfo>
+        <defaultCsrFormat>PEM</defaultCsrFormat>
+    </approvedCA>
+    <approvedTSA>
+        <name>TimeServer.mn TSA Signer</name>
+        <url>https://tsa.timeserver.mn/</url>
+        <cert>LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNuVENDQWlLZ0F3SUJBZ0lRVEMrRGJVVEROdlltS2wweEhMTDJYekFLQmdncWhrak9QUVFEQWpCS01Rc3cKQ1FZRFZRUUdFd0pOVGpFYk1Ca0dBMVVFQ2d3U1IyVnlaV2RsSUZONWMzUmxiWE1nVEV4RE1SNHdIQVlEVlFRRApEQlZIWlhKbFoyVWdWRk5CSUVsemMzVnBibWNnUTBFd0hoY05Nall3TkRFNU1ETTBOVEUwV2hjTk1qZ3dOekl5Ck1ETTBOVEUwV2pCTk1Rc3dDUVlEVlFRR0V3Sk5UakViTUJrR0ExVUVDZ3dTUjJWeVpXZGxJRk41YzNSbGJYTWcKVEV4RE1TRXdId1lEVlFRRERCaFVhVzFsVTJWeWRtVnlMbTF1SUZSVFFTQlRhV2R1WlhJd1dUQVRCZ2NxaGtqTwpQUUlCQmdncWhrak9QUU1CQndOQ0FBU3FLWGk5OFJvVk5xMlcrUHlEZ1QzWWFCVExxZndUTGRNcnBUakdZOGJaCmZNRHV3SGMwUGhuOFROdE5OOXNhck92a1Q4aXVsdXU0OTdZTVVWeGJVTEpCbzRIbU1JSGpNQWtHQTFVZEV3UUMKTUFBd0RnWURWUjBQQVFIL0JBUURBZ2VBTUJZR0ExVWRKUUVCL3dRTU1Bb0dDQ3NHQVFVRkJ3TUlNQjBHQTFVZApEZ1FXQkJURGdRYXlHMFo4NXNyTVpVZ2k3WktLQVRPMEhUQWZCZ05WSFNNRUdEQVdnQlNHdUpjckl3MzE2U2JUCjMvMktEcGRId2s3cnRqQTFCZ05WSFI4RUxqQXNNQ3FnS0tBbWhpUm9kSFJ3Y3pvdkwyTnliQzVuWlhKbFoyVXUKYlc0dmFYTnpkV2x1WnkxallTNWpjbXd3TndZSUt3WUJCUVVIQVFFRUt6QXBNQ2NHQ0NzR0FRVUZCekFCaGh0bwpkSFJ3Y3pvdkwyOWpjM0F1WjJWeVpXZGxMbTF1TDI5amMzQXdDZ1lJS29aSXpqMEVBd0lEYVFBd1pnSXhBTElHCitsSmxzRXhhcUVjMUdGak5sWVlpYjVkMVk0Y1NEMlM4dlJSOHpDaDBWQllxWEl5VStzVE92Zktkc3RsT3hRSXgKQUxKU2FKcVJhWkpvSGVhZlZQVWZDYit2clBHZ0hFa1NMN2xtWWZDSlNDVUt0anRFeS9LU3dvT0g3bXlneFFubAplZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K</cert>
+        <costType>FREE</costType>
+    </approvedTSA>
+    <member id="id0">
+        <memberClass>
+            <code>COM</code>
+            <description>Commercial organization</description>
+        </memberClass>
+        <memberCode>6235972</memberCode>
+        <name>Gerege Systems LLC</name>
+        <subsystem id="id1">
+            <subsystemCode>MANAGEMENT</subsystemCode>
+            <subsystemName>Management Services</subsystemName>
+        </subsystem>
+        <subsystem id="id2">
+            <subsystemCode>GEREGE-ID</subsystemCode>
+        </subsystem>
+    </member>
+    <member id="id3">
+        <memberClass>
+            <code>COM</code>
+            <description>Commercial organization</description>
+        </memberClass>
+        <memberCode>6884857</memberCode>
+        <name>Gerege Core LLC</name>
+        <subsystem id="id4">
+            <subsystemCode>TEST-DEMO</subsystemCode>
+            <subsystemName>TEST-DEMO Consumer</subsystemName>
+        </subsystem>
+    </member>
+    <securityServer>
+        <owner>id0</owner>
+        <serverCode>MGMT-SS</serverCode>
+        <address>mgmt.gerege.mn</address>
+        <authCertHash>IMWpgSYixjyAE7BfTnw3AVEuNRH+wShmtRGC8uav+qI=</authCertHash>
+        <client>id1</client>
+    </securityServer>
+    <securityServer>
+        <owner>id3</owner>
+        <serverCode>CORE-SS-1</serverCode>
+        <address>ss.gerege.mn</address>
+        <authCertHash>I46ZsDEm/UYQ2Lw6kWt5ZCQ6eqa0T4PbZo1lVO29Tls=</authCertHash>
+        <client>id4</client>
+    </securityServer>
+    <securityServer>
+        <owner>id0</owner>
+        <serverCode>RP-SS-1</serverCode>
+        <address>rp.gerege.mn</address>
+        <authCertHash>JCQbKJiF0N2y1aq/k1akZ4TAK10ovRTPTX0/u2LzP60=</authCertHash>
+        <client>id2</client>
+    </securityServer>
+    <globalGroup>
+        <groupCode>security-server-owners</groupCode>
+        <description>Security server owners</description>
+        <groupMember ns2:objectType="MEMBER">
+            <ns2:xRoadInstance>MN</ns2:xRoadInstance>
+            <ns2:memberClass>COM</ns2:memberClass>
+            <ns2:memberCode>6235972</ns2:memberCode>
+        </groupMember>
+        <groupMember ns2:objectType="MEMBER">
+            <ns2:xRoadInstance>MN</ns2:xRoadInstance>
+            <ns2:memberClass>COM</ns2:memberClass>
+            <ns2:memberCode>6884857</ns2:memberCode>
+        </groupMember>
+    </globalGroup>
+    <globalSettings>
+        <memberClass>
+            <code>BANK</code>
+            <description>Bank</description>
+        </memberClass>
+        <memberClass>
+            <code>COM</code>
+            <description>Commercial organization</description>
+        </memberClass>
+        <memberClass>
+            <code>EDU</code>
+            <description>Educational</description>
+        </memberClass>
+        <memberClass>
+            <code>GOV</code>
+            <description>Government institution</description>
+        </memberClass>
+        <memberClass>
+            <code>INS</code>
+            <description>Insurance</description>
+        </memberClass>
+        <memberClass>
+            <code>NGO</code>
+            <description>Non-governmental organization</description>
+        </memberClass>
+        <ocspFreshnessSeconds>3600</ocspFreshnessSeconds>
+    </globalSettings>
+</ns3:conf>
