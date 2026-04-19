@@ -80,6 +80,25 @@ The field NAME is unchanged for backwards-compat with consumers; only the value 
 
 **Watch out:** Anything that joins on the API-returned `national_id` in a downstream system needs to know it is now a civil_id, not a regnum. Document this in partner onboarding material.
 
+## 2026-04-19 — X-Road Gateway as single RP refactor (no per-partner DB writes)
+
+**Goal:** Eliminate the parallel allowlist in eid-gerege-backend that mirrored every Service-clients grant on rp.gerege.mn. The user's directive: rp.gerege.mn's Service-clients ACL is the single source of truth — granting access there must be enough, with no INSERT into the backend DB.
+
+**Procedure:**
+1. Migration `013_xroad_gateway_rp.sql`: inserted ONE relying_parties row `00000001-0000-4000-8000-000000000000` "rp.gerege.mn X-Road Gateway"; added `sessions.xroad_client TEXT` and `audit_logs.xroad_client TEXT` columns.
+2. `internal/middleware/xroad_auth.go::applyXRoadIdentity` rewritten — no more `repo.GetXRoadSubsystem` lookup; just sets `c.Locals("rp_id") = XRoadGatewayRPID` and `c.Locals("xroad_client") = header`. Constant `XRoadGatewayRPID` exposed for service-layer reuse.
+3. `internal/service/session.go::AuthInitiate/SignInitiate` gained `xroadClient string` param; persisted to session row + audit details JSONB via `xroadClientDetails()` helper.
+4. `internal/service/webauth.go::WebAuthInitiate/WebSignInitiate` and `internal/service/organization.go` org-register sign — switched from `GetRPByDomain("gerege.mn")` to `gatewayRPID()` + hardcoded `geregeWebXRoadClient = "MN/COM/6235972/GEREGE-WEB"` for in-process attribution.
+5. Deleted: `internal/domain/xroad_subsystem.go`, `internal/repository/xroad_subsystem.go`, `Repository.GetRPByDomain`, migration `012_xroad_subsystems.sql`. Dropped table `xroad_subsystems`.
+6. Wiped `sessions`, `audit_logs`, `tsa_logs` (pre-launch — no real customers, hash chain reset). Deleted Gerege Web/SSO/Sign/TestDemo rows from relying_parties.
+
+**Onboarding playbook for new partners (post-refactor):**
+1. Partner registers their subsystem via clientReg → CS approves
+2. rp.gerege.mn UI → Clients → GEREGE-ID → Service clients → Add subjects → `MN/<class>/<code>/<subsystem>` → Save
+3. Smoke test from partner's IS — that's it. No SQL on backend side.
+
+**Watch out:** This means any subsystem with a Service-clients grant on rp.gerege.mn can call backend operations. The trust radius now encompasses the entire X-Road approval flow + nginx IP gate. If the IP gate is ever misconfigured (e.g. allows wider than rp.gerege.mn's IP), an attacker who can spoof the X-Gerege-SS-Token header would gain access. The shared token MUST stay secret + the IP gate MUST stay tight.
+
 ## Watch list for the next operator
 
 - **Root CA private key** is on disk at `/opt/gerege-mn-eid/eid-gerege-backend/config/pki/root-ca.key` and used only to sign new intermediate CAs. Move to offline storage when not actively in use; never commit.

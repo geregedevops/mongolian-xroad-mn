@@ -35,7 +35,7 @@ Granted via Services tab → expand each operation → Add subjects:
 |--------------------------------|----------------------------------------------|
 | `MN/COM/6884857/TEST-DEMO`     | all operations of `auth-svc`, `sign-svc`, `cert-svc` |
 
-X-Road defaults to deny — any new partner subsystem (e.g. a bank's payment app) must be added explicitly here AND mirrored as a row in the gerege backend's `xroad_subsystems` table for backend-side authorization.
+X-Road defaults to deny — any new partner subsystem (e.g. a bank's payment app) must be added explicitly here. That's the ONLY authorization step (no backend DB write needed; see HISTORY 2026-04-19 X-Road Gateway refactor).
 
 ## Required prerequisites — these lessons were earned the hard way
 

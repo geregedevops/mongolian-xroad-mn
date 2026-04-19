@@ -66,25 +66,14 @@ Header: X-Road-Client: MN/<class>/<code>/<subsystem>
 
 But it will fail with `access_denied` until WE grant their subsystem access on rp.gerege.mn. To grant:
 
-1. SSH-tunnel to rp UI: `ssh -L 14003:localhost:4000 rp.gerege.mn`.
-2. https://localhost:14003 → Clients → GEREGE-ID → Service clients → Add subjects → `MN/<class>/<code>/<subsystem>`.
+1. SSH-tunnel to rp UI: `ssh -L 4000:localhost:4000 rp.gerege.mn`.
+2. https://localhost:4000 → Clients → GEREGE-ID → Service clients → Add subjects → `MN/<class>/<code>/<subsystem>`.
 3. Tick the operations they should be able to call (auth-svc, sign-svc, cert-svc).
 4. Save.
 
-AND mirror the mapping in the gerege backend's database so the backend authorization layer can find a matching RP row:
+That's it. **There is no backend DB step.** As of 2026-04-19 the eid-gerege-backend has exactly one `relying_parties` row — the X-Road Gateway (`00000001-0000-4000-8000-000000000000`) — and trusts ANY caller that arrives via the /xroad/v1 trust gate (nginx IP-pinned to rp.gerege.mn + `X-Gerege-SS-Token`). The `X-Road-Client` header value is captured into `sessions.xroad_client` and `audit_logs.details` for traceability.
 
-```sql
--- on gerege.mn, in geregeid db
-INSERT INTO relying_parties (name, domain, api_key_hash, sign_permission, status)
-VALUES ('Partner Bank XYZ',
-        'xroad://MN/<class>/<code>/<subsystem>',
-        'xroad-no-api-key-' || gen_random_uuid()::text,
-        true, 'ACTIVE')
-RETURNING id;
-
-INSERT INTO xroad_subsystems (rp_id, instance, member_class, member_code, subsystem_code)
-VALUES ('<id-from-above>', 'MN', '<class>', '<code>', '<subsystem>');
-```
+In other words: rp.gerege.mn's Service-clients ACL is the single source of truth for "who can call what". No SQL on the backend side per partner.
 
 End-to-end is now live for that partner.
 
