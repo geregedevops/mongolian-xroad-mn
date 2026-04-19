@@ -45,6 +45,20 @@ Daily cron checks leaf cert expiry and alerts via email if < 14 days left. The `
 
 **Watch out:** If `renew-leaf.sh` runs at 3am via cron and the operator doesn't notice for a week, every X-Road SS will start failing TSA verification. Either disable auto-renew or add a final step to the script that scp's the new leaf to a known location and pings an operator.
 
+## 2026-04-19 — TSA cert fingerprint pinned in eid-gerege-backend
+
+**Goal:** Detect MitM (or accidental cert swap) on TSA responses. Until today the backend logged a warning every TSA call — `TSA_CERT_FINGERPRINT not configured — pin this value to prevent MitM` — but did not enforce a fingerprint match. After pinning, any unexpected TSA cert swap fails the timestamp verification loud and clear.
+
+**Procedure:**
+```bash
+ssh gerege.mn 'sudo bash -c "echo TSA_CERT_FINGERPRINT=be6e60c500aad60eda59ce3da3164305da622e5c058f69c60c7461a0221b7829 >> /opt/gerege-mn-eid/eid-gerege-backend/.env"'
+ssh gerege.mn 'cd /opt/gerege-mn-eid/eid-gerege-backend && sudo docker compose up -d backend'
+```
+
+The pinned hash is the SHA-256 of the current TSA leaf cert DER (`be6e60c500aad60eda59ce3da3164305da622e5c058f69c60c7461a0221b7829`). The validator lives in `eid-gerege-backend/internal/tsa/client.go:200-220`.
+
+**Watch out:** Every leaf rotation (annually-ish via `renew-leaf.sh`) MUST also update `TSA_CERT_FINGERPRINT` in the backend `.env` and restart the backend. If you forget, every signing flow will fail with `TSA cert fingerprint mismatch` until the env is updated. Add this to `renew-leaf.sh` as a final step — print the new hash and the exact backend update command — so the operator can not miss it.
+
 ## Watch list for the next operator
 
 - **`leaf-key.pem`** is the entire trust of the TSA. Backed up encrypted off-host but never duplicated to other servers. If lost, every previously-issued timestamp token becomes "unverifiable from this TSA" once we issue a new key — which is fine forensically (the old responses already include the old cert) but means we can't re-sign anything with the lost key.
