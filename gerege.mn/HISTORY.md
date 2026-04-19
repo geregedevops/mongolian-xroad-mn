@@ -1,0 +1,88 @@
+# gerege.mn — operational history
+
+This host carries more state than any other in the ecosystem (Root + Issuing CA + TSA Issuing CA + OCSP responder + CRL distribution + sign portal + the X-Road IS at /xroad/v1). Most incidents in the network start or end here.
+
+## Pre-2026-04 — PKI hardening (SoftHSM2 + autobackup + serial fix)
+
+The Gerege CA stack was originally a vanilla openssl install. Three hardening passes happened earlier this year:
+
+1. **SoftHSM2 backbone for issuing operations** — issuing CA private key migrated into a SoftHSM2 token so the bare key file is not on disk during signing. Root CA key is still on disk for offline use only.
+2. **Daily automatic backup cron** — Issuing CA + Root CA + DB schema → encrypted tarball uploaded off-host.
+3. **Leading-zero serial bug** — `gerege-ocsp` used to drop the leading zero byte from positive cert serials, breaking lookups for any cert whose serial happened to start with `0x00`. Patched and verified with hash equality of stored vs returned serial bytes.
+
+**Watch out:** EC-HSM code refactor in `gerege-ocsp/backend` is still pending. Until that lands, the OCSP responder uses an in-memory key copy at startup; if the SoftHSM token is rotated mid-run the responder must be restarted to pick up the new key.
+
+## 2026-04-19 — `/xroad/v1` IS endpoint added behind nginx IP gate
+
+**Goal:** Expose the existing /rp/v1 backend handlers under a separate `/xroad/v1` path so:
+- the X-Road consumer flow has clean audit/log boundary vs legacy API-key callers,
+- nginx can apply IP gating + token injection independently of the API-key auth,
+- future deprecation of /rp/v1 doesn't ripple into the X-Road path.
+
+**What was added:**
+- `eid-gerege-backend/internal/middleware/xroad_auth.go` → new `XRoadOnly` middleware that requires `X-Gerege-SS-Token` to match the env-configured value AND `X-Road-Client` header to be set. No API-key fallback.
+- `eid-gerege-backend/cmd/server/main.go` → registers `/xroad/v1` route group with `XRoadOnly`, reusing the same `rp.RegisterRoutes(g, svc)`.
+- `nginx/ca.gerege.mn.conf` → new `location /xroad/v1/` block that returns 403 unless `$remote_addr == 38.180.251.163` (rp.gerege.mn), then injects `proxy_set_header X-Gerege-SS-Token "..."` before proxying to backend.
+- `XROAD_SS_TOKEN` env var → `openssl rand -hex 32` → written into `/opt/gerege-mn-eid/eid-gerege-backend/.env` AND into the nginx proxy_set_header. Both must match exactly.
+
+**Watch out:** When rotating `XROAD_SS_TOKEN`, update BOTH the nginx config and the backend `.env` in the same atomic deploy (otherwise requests will 401 for a window). The token literal value lives only on this host — repo only references the env var name.
+
+## 2026-04-19 — `gerege-ocsp` cache freshness keeps biting
+
+**Symptom:** Periodically (especially after long idle periods or container restart) every X-Road SS sees `incorrect_validation_info: OCSP response is too old`.
+
+**Root cause:** `gerege-ocsp` caches signed OCSP responses for `freshness * 0.7` seconds. The X-Road default freshness window is 3600s, so a cached response older than ~42 minutes will still be served by the responder but rejected by every consumer.
+
+**Workaround:** `docker restart gerege-ocsp` flushes the cache and triggers a fresh sign.
+
+**Real fix (TODO):** Make `gerege-ocsp` compute thisUpdate/nextUpdate dynamically each request (re-sign on demand) instead of caching a frozen response. There's a stub for this in the gerege-ocsp repo but it is not yet wired into the request handler.
+
+**Watch out:** If you set up monitoring, alert on "OCSP response age > 1800s as observed by xroad-signer.log on any member SS". That gives a 30-min warning before the 60-min hard fail.
+
+## 2026-04-19 — Cyrillic national_id failed via X-Road but worked via direct curl
+
+**Symptom:** `GET /xroad/v1/certificate/lookup/МА74101813` via X-Road returned `{"has_certificate":false}` even though the user existed and had certs.
+
+**Root cause:** X-Road producer SS forwards URL paths URL-encoded (`%d0%9c%d0%90...`). Fiber v2's `c.Params("national_id")` does NOT auto-decode percent-encoded segments. The DB query `WHERE national_id = '%d0%9c%d0%9074101813'` of course missed the user whose stored value is the decoded UTF-8 string `МА74101813`.
+
+**Fix:** `eid-gerege-backend/internal/handler/rp/routes.go::certLookup` patched to wrap with `url.PathUnescape(c.Params("national_id"))`.
+
+**Watch out:** Any handler that takes a path parameter and queries the DB by it has the same trap. Audit the codebase for `c.Params(...)` and add `url.PathUnescape` wherever the value can contain non-ASCII.
+
+## 2026-04-19 — Sigstore TSA refused to start with non-Gerege intermediate
+
+When we first tried to chain the TimeServer.mn TSA leaf under the existing Gerege Issuing CA, Sigstore TSA panicked at startup:
+```
+panic: certificate must have extended key usage timestamping set to sign timestamping certificates
+```
+
+**Root cause:** Sigstore TSA validates that EVERY non-root cert in `certchain.pem` carries `id-kp-timeStamping` EKU. The general-purpose Gerege Issuing CA has no EKU restriction, so a leaf signed under it gets the chain rejected by Sigstore at startup.
+
+**Fix:** Carved out a dedicated `Gerege TSA Issuing CA` intermediate signed directly by the Root CA (`/opt/xroad-ca/tsa-issuing/`). Its profile (`tsa_issuing_ca` in `xroad-extensions.cnf`) is `CA:TRUE pathlen:0` with `EKU critical timeStamping`. The leaf is then signed under this intermediate.
+
+**Watch out:** Don't sign any other type of leaf under `Gerege TSA Issuing CA` — its EKU restriction means any non-timeStamping cert issued from it would be silently rejected by validators that walk the chain (per RFC 5280 §4.2.1.12). It's a single-purpose CA.
+
+## 2026-04-19 — `CertificateLookup` only returned `{has_certificate, kyc_level, expires_at}`, not the cert PEM
+
+**Goal:** test.gerege.mn's PAdES build code needed the user's SIGN cert PEM up-front to compute the signed-attributes hash before requesting a signature.
+
+**Fix:** Extended `eid-gerege-backend/internal/service/certificate.go::CertificateLookup` to return a `certificates[]` array with `{type, pem, serial_number, valid_until}` for each active cert. Backwards-compatible — the old fields are still there.
+
+**Watch out:** Returning the full PEM means the cert lookup endpoint is now in scope for PII / privacy review. We mitigated by also swapping the `national_id` field's value to the user's `civil_id` (public) instead of regnum (private) — see next entry.
+
+## 2026-04-19 — `national_id` field swap from regnum (private) to civil_id (public)
+
+**Background:** In Mongolia the `регистрийн дугаар` (regnum, e.g. `МА74101813`) is considered personally sensitive and should not be returned to relying parties. The `civil_id` (e.g. `111949212017`) is the public identifier printed on the ID card.
+
+**Fix:** In `routes.go::authSession` and `routes.go::signSession`, the `identity.national_id` field's *value* is now `*user.CivilID` when present (with regnum fallback). `service/certificate.go::CertificateLookup` does the same for its `national_id` response field.
+
+The field NAME is unchanged for backwards-compat with consumers; only the value semantics shifted.
+
+**Watch out:** Anything that joins on the API-returned `national_id` in a downstream system needs to know it is now a civil_id, not a regnum. Document this in partner onboarding material.
+
+## Watch list for the next operator
+
+- **Root CA private key** is on disk at `/opt/gerege-mn-eid/eid-gerege-backend/config/pki/root-ca.key` and used only to sign new intermediate CAs. Move to offline storage when not actively in use; never commit.
+- **Issuing CA private key** lives in SoftHSM2 token. PIN is in `reference_cs_secrets.md` (operator local memory). Rotating the PIN requires re-importing every cert reference — not a low-risk operation.
+- **`xroad-ca/sign-xroad-csr.sh`** is a wrapper around openssl x509 -req. It accepts profiles `sign | auth | tsa`. If you add a new profile (e.g. for a new service role), update both `xroad-extensions.cnf` and the script's profile-validation line.
+- **Let's Encrypt for ca.gerege.mn** — auto-renewed by certbot (cron). After renewal, rp.gerege.mn's IS TLS cert needs to be re-uploaded if the cert chain changed. Build a cron alert to remind you.
