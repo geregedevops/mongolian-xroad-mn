@@ -119,6 +119,16 @@ Fix: dropped the in-memory cache lookup entirely in `gerege-ocsp/internal/ocsp/r
 
 **Watch out (deprecated):** the operational dance `docker restart gerege-ocsp + systemctl restart xroad-signer` no longer needed. If "OCSP response is too old" recurs, the bug is probably in xroad-signer's own refresh schedule — not in our responder.
 
+## 2026-04-20 — Dev bulk revoke hit production X-Road certs; carved out xroad.infra_certificates schema
+
+**Incident:** At 16:11 Asia/Ulaanbaatar a dev-environment operation bulk-revoked 11 rows in `public.certificates`. Among them was rp.gerege.mn's active XROAD_AUTH cert (serial `6b559989a581c11cb77d088743e5eb7a`). Every consumer → rp mTLS handshake immediately failed with `server.clientproxy.ssl_authentication_failed: OCSP response indicates certificate status is REVOKED`. Surface was a plain 500 on test.gerege.mn login.
+
+**Recovery:** `UPDATE certificates SET status='ACTIVE', revoked_at=NULL, revoke_reason=NULL WHERE revoked_at='2026-04-20 08:11:37.994087+00'` restored all 11. Restarted xroad-signer on all 4 SSes to force OCSP refresh.
+
+**Structural fix** (commit a1f9f29 on `gerege-mn-eid`): migration `015_xroad_infra_schema.sql`. Pulled the 15 X-Road SS auth/sign certs out of `public.certificates` into a new `xroad.infra_certificates` table in a dedicated schema. Created `public.v_all_certificates` UNION view so `gerege-ocsp` can keep its single-query interface. Added `xroad.infra_certificates_audit` with trigger-based INSERT/UPDATE/DELETE logging (captures `session_user`, `inet_client_addr()`, `application_name`) — future accidental mutations are forensically visible.
+
+**Watch out:** Dev scripts that `TRUNCATE`/`DELETE`/`UPDATE` against `public.certificates` no longer touch infra certs. The ONE remaining risk vector: an explicit `TRUNCATE xroad.infra_certificates` — unlikely to be in any dev script since the schema name is distinct. Real RLS/role-based protection is a later hardening pass.
+
 ## 2026-04-19 — TSA cert fingerprint pinned + device HMAC key rotation backend
 
 Two mobile-security improvements landed (commits 013b742 backend + d7894be docs):
