@@ -1,8 +1,12 @@
 # ss.gerege.mn — operational history
 
-## 2026-04 — Pre-existing install (Gerege Core LLC)
+## 2026-04 — Pre-existing install (Gerege Core LLC) re-used a long-lived VM
 
 Was the first member SS deployed for the Mongolia X-Road instance after CS came up. Owner client `MN/COM/6884857` (Gerege Core LLC) registered via the standard mgmt-service flow.
+
+**Reused VM — not a fresh install.** `/var/log/apt/history.log.6.gz` shows apt activity from `2024-04-23` (Ubuntu live-installer bootstrapping), then sporadic `unattended-upgrades` and `apt upgrade` across 2024-2025, and finally the X-Road install on top. The root bash history (`apt update && apt upgrade`, `pvresize /dev/sda3`, `lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv`, `resize2fs`) shows the disk was grown to make room for X-Road before the package install. **Watch out:** if this SS is ever wiped and re-provisioned, don't assume the kernel + networking config is the stock Ubuntu 24.04 — there have been manual `/etc/netplan/50-cloud-init.yaml` edits and custom `sshd_config` on this host.
+
+**Install automation.** This SS was installed using an `expect`-driven helper (`/tmp/xroad-install.exp` in `~grgdev/.bash_history`) that debconf-answers the `xroad-securityserver-$VARIANT` wizard prompts (admin username, DB URL, CN, SAN, JVM memory profile). That script is reusable for any future Ubuntu 24.04 member SS — the bash history entry is the only record of it today; the script itself was a scratch `/tmp/` file and is now gone.
 
 ## 2026-04-19 — Adding TEST-DEMO subsystem hit `Member 'SUBSYSTEM:MN/COM/6884857/TEST-DEMO' has no suitable certificates`
 
@@ -59,6 +63,19 @@ sudo ufw allow from 38.180.242.76 to any port 80 proto tcp comment "test.gerege.
 ```
 
 **Watch out:** This SS uses ports `80/tcp` and `443/tcp` for the consumer REST gateway (custom — X-Road defaults are 8080/8443). Any new IS host needs an explicit UFW rule. Don't open port 80 to public — anyone with network access can send X-Road requests as TEST-DEMO and consume our quota.
+
+## 2026-04-20 — Pre-prod showcase opened port 4000/tcp to public Internet
+
+Same change as on cs/mgmt/rp: `ufw allow 4000/tcp comment 'pre-prod showcase 2026-04-20'`. Consumer SS admin panel now reachable from the Internet. Same risk, same remediation (`sudo ufw delete allow 4000/tcp` before go-live).
+
+## 2026-04-22 — State-verification snapshot (taken for monorepo audit)
+
+- **X-Road package set matches the documented "ee + opmonitor" profile**: `xroad-securityserver`, `xroad-securityserver-ee` (Estonian country profile), `xroad-opmonitor`, `xroad-addon-opmonitoring`, plus the common security-server stack. Running services confirm `xroad-opmonitor` is the differentiator vs mgmt/rp.
+- **Postgres has an extra `op-monitor` database** (6 dbs total: `messagelog`, `op-monitor`, `postgres`, `serverconf`, `template0`, `template1`). Same cluster, same credentials pattern.
+- **Listening ports include `:80` and `:443` (non-standard)** — consumer REST gateway on standard HTTP/HTTPS ports, not the X-Road default `8080`/`8443`. Also `:5500` (SS peer message), `:5577` (OCSP peer), `:4000` (showcase), plus opmonitor on loopback ports `2080`/`2081`.
+- **UFW rule-set** (as of snapshot): `22/tcp` Anywhere (not admin-pinned like cs — an inconsistency worth fixing), `5500/tcp`+`5577/tcp` Anywhere (SS peer), `8080/tcp`+`8443/tcp` from `10.0.0.0/24` (LAN consumers), `80/tcp` from `38.180.242.76` (test.gerege.mn IS only), `4000/tcp` Anywhere (showcase).
+- **Internal IP**: `10.0.0.27/24` on `ens160` — this host is behind NAT; public `66.181.175.134` is the router's forwarding address, not on the SS itself.
+- **Softtoken has 2 active p12s** (`2089…1CD3`, `DC1C…4A09`, both 2026-04-19 04:50). Matches one AUTH + one SIGN key round. `.softtoken.p12` 2026-04-19 04:43 is the seal key.
 
 ## Watch list for the next operator
 

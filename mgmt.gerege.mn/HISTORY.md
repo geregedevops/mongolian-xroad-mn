@@ -44,6 +44,22 @@ AUTH + SIGN keys generated locally, CSRs taken to gerege.mn, signed via `/opt/xr
 
 **Watch out:** This cert is self-signed and thus will not auto-renew via Let's Encrypt. If cs.gerege.mn is reinstalled (or just regenerates its internal cert), repeat the upload.
 
+## 2026-04-20 — Pre-prod showcase opened port 4000/tcp to public Internet
+
+**Change:** `ufw allow 4000/tcp comment 'pre-prod showcase 2026-04-20'`. The proxy-ui-api UI (SS admin panel) is reachable from any browser instead of via SSH tunnel.
+
+**Risk:** Same as the cs side — form-login only, no mTLS, no IP allow-list. A compromised UI session on mgmt SS can push `clientReg`/`clientDeletion`/`maintenanceModeEnable` on behalf of the MGMT subsystem and therefore poke the whole control plane.
+
+**Watch out:** Revert with `sudo ufw delete allow 4000/tcp` before the showcase window closes. Same rule exists on cs/ss/rp and must be reverted in lockstep.
+
+## 2026-04-22 — State-verification snapshot (taken for monorepo audit)
+
+- **Running services match a healthy mgmt/owner SS**: `xroad-proxy`, `xroad-proxy-ui-api`, `xroad-confclient`, `xroad-signer`, `xroad-monitor`, `xroad-addon-messagelog`, `postgresql@16-main`. Uptime 4d 5h (boot 2026-04-18 UTC).
+- **Softtoken has 4 active p12s** (`0DF0…DDA8`, `C533…6B1D`, `EE5D…F040`, `FE0F…E39A`, all mtime 2026-04-19 05:28). Consistent with one AUTH + one SIGN key pair × (CSR re-issue round), plus the initial provisional keys the wizard created. No predelete sidecar present — so no pending cleanup.
+- **Listening ports** (confirmed): `22` SSH, `5500` SS peer message (public), `5577` SS peer OCSP (public), `8080` + `8443` consumer REST gateway, `4000` public (showcase — see above), `5560`/`5566`/`5567`/`5675`/`2552` loopback java IPC, `5432` postgres loopback.
+- **UFW rule-set** (as of snapshot): `22/tcp` from admin IP only, `5500/tcp` + `5577/tcp` open (X-Road peer), `4000/tcp` showcase exposure. **No UFW rule exists for `5558/tcp` or `5567/tcp`** even though the registration-service endpoint `cs.gerege.mn:4002` calls back through those — they're loopback-only today, but worth noting if inter-SS CS callback routing is ever re-architected.
+- **GPG revoc key present** (`A052…6769.rev`) — backup-encryption GPG keyid's revocation certificate is on disk. Good for "rotate GPG without losing ability to decrypt old backups" story.
+
 ## Watch list for the next operator
 
 - The owner of mgmt SS must always be `Gerege Systems LLC` (`MN/COM/6235972`). Do not change ownership; the entire instance authorization model assumes the management services are signed by Gerege Systems' SIGN cert.

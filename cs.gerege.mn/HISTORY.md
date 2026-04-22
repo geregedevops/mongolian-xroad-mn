@@ -27,6 +27,23 @@ A diary of every incident that touched the Central Server, what it broke, what t
 
 When you delete + re-add a TSA in CS UI, the cert is stored in `shared-params.xml` as base64 of the *PEM file text* (with `-----BEGIN CERTIFICATE-----` lines), not base64 of the raw DER. So `python -c "hashlib.sha256(base64.b64decode(<the xml field>)).hexdigest()"` will not equal `openssl x509 -fingerprint -sha256` of the same cert. Just decode as PEM (the bytes start with `-----BEGIN`) and you'll see the right cert. Spent 20 minutes on this thinking the upload had failed.
 
+## 2026-04-20 — Pre-prod showcase exposed port 4000/tcp to public Internet
+
+**Change:** `ufw allow 4000/tcp comment 'pre-prod showcase 2026-04-20'` on every MN host (cs, mgmt, ss, rp). The CS admin UI at `https://cs.gerege.mn:4000` is now reachable from any browser instead of the previous `ssh -L 14000:localhost:4000` tunnel-only access.
+
+**Why:** showcase/demo convenience — screenshare of the UI without setting up tunnels for observers.
+
+**Risk:** The CS UI is protected only by form-login (user `xrdadmin`). No mTLS, no IP allow-list, no WAF. A leaked admin password is fully sufficient for anyone on the Internet to impersonate `xrdadmin` and, from there, edit globalconf, revoke members, rotate the CS signing key, etc.
+
+**Watch out:** Revert before go-live: `sudo ufw delete allow 4000/tcp`. The baseline access pattern is `ssh -L 14000:localhost:4000 cs.gerege.mn` and should be restored. Same rule lives on mgmt/ss/rp and must be removed in lockstep.
+
+## 2026-04-22 — State-verification snapshot (taken for monorepo audit)
+
+- **Running services match install-time expectation**: `xroad-center`, `xroad-center-management-service`, `xroad-center-registration-service`, `xroad-confclient`, `xroad-signer`, `xroad-nginx`, `postgresql@16-main`. No degraded/failed units. Uptime 4d 8h (boot 2026-04-18 UTC).
+- **Signer softtoken holds two active p12s** (`74A8…4748.p12` added 2026-04-19 05:42, `D6CF…5790.p12` added 2026-04-19 05:43) alongside `.softtoken.p12`, plus a `keyconf.xml.predelete` sidecar from the same window — fallout from the TSA cert-rotation UI work. No action needed; kept for audit trail.
+- **Listening ports**: `80` + `443` + `4001` public (nginx globalconf), `4002` restricted per-member (mgmt/rp/ss IPs), `4000` public (see showcase entry above), `8084`/`8085` + `5559`/`5560`/`5675` loopback-only (jetty + java IPC), `5432` postgres loopback.
+- **Globalconf on disk refreshes every minute** (`/etc/xroad/globalconf/MN/shared-params.xml.metadata` mtime `2026-04-22 11:25`) — confclient loop healthy.
+
 ## Watch list for the next operator
 
 - **GPG backup keyid in `local.ini`** — the value is REDACTED in this repo. Real keyid is in `reference_cs_secrets.md`. Rotating GPG breaks `xroad-confclient` resigning unless the new key is imported into `/etc/xroad/gpghome` first.

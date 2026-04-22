@@ -1,11 +1,65 @@
-backup.d
-conf.d
-configuration-parts
-db.properties
-devices.ini
-globalconf
-gpghome
-nginx
-services
-signer
-ssl
+/etc/xroad tree on cs.gerege.mn (snapshot 2026-04-22)
+
+Layout that a fresh `xroad-centralserver` install produces, with the
+Mongolia-specific bits annotated. Secret-bearing subtrees (gpghome,
+signer/) are listed here for navigation only — no files from them
+live in this repo.
+
+/etc/xroad/
+├── backup.d/
+│   └── 10_xroad-signer         (hook for `xroad-cli backup` to include signer keys)
+├── conf.d/
+│   ├── center.ini              (CS-specific app settings)
+│   ├── centralserver-{admin,management,registration}-service-logback.xml
+│   ├── common.ini
+│   ├── confclient-logback{,-service}.xml
+│   ├── local.ini               (api-tokens + GPG backup keyid — **NOT** in repo)
+│   ├── override-signer.ini
+│   ├── signer.ini
+│   ├── signer-console-logback.xml
+│   └── signer-logback.xml
+├── configuration-parts/
+│   ├── center-monitoring.ini   ← mirrored into this repo as xroad/center-monitoring.ini
+│   ├── ocsp-fetchinterval.ini  ← mirrored as xroad/ocsp-fetchinterval.ini
+│   └── ocsp-nextupdate.ini     ← mirrored as xroad/ocsp-nextupdate.ini
+├── db.properties               (postgres creds for centerui_production — **NOT** in repo)
+├── devices.ini                 (HSM tokens config)
+├── globalconf/
+│   ├── files
+│   ├── instance-identifier     (contents: "MN")
+│   └── MN/
+│       ├── private-params.xml         ← mirrored as xroad/private-params.xml
+│       ├── private-params.xml.metadata
+│       ├── shared-params.xml          ← mirrored as xroad/shared-params.xml
+│       └── shared-params.xml.metadata
+├── gpghome/                    (GPG keyring for backup encryption — **NEVER** copied)
+│   ├── openpgp-revocs.d/
+│   ├── private-keys-v1.d/
+│   ├── pubring.kbx
+│   └── trustdb.gpg
+├── nginx/                      (CS-internal nginx fragments, symlinked from /etc/nginx)
+│   ├── management-service.conf       ← mirrored as nginx/xroad-management-service.conf
+│   ├── nginx-secure-addons.conf
+│   ├── registration-service.conf     ← mirrored as nginx/xroad-registration-service.conf
+│   └── xroad-public.conf             ← mirrored as nginx/xroad-public.conf
+├── services/
+│   ├── centralserver-{admin,management,registration}-service.conf
+│   ├── confclient.conf
+│   ├── global.conf
+│   ├── local.properties        (empty on CS)
+│   ├── signer.conf
+│   └── signer-console.conf
+├── signer/                     (**private signing material** — NEVER copied)
+│   ├── keyconf.xml
+│   ├── keyconf.xml.predelete   (post-rotation sidecar from 2026-04-19 TSA fix)
+│   └── softtoken/
+│       ├── .softtoken.p12
+│       ├── 74A8C2F35CE10AB917972C2E9D5C25D98AF24748.p12
+│       └── D6CF1C0B131B16654AE3F1085448034984B95790.p12
+└── ssl/                        (CS-internal TLS bundles; .crt copies **only**, no .key)
+    ├── center-admin-service.{crt,key,p12}         (crt mirrored if needed; key never)
+    ├── cs-backup-pub.asc                          (GPG backup *public* key — safe to mirror)
+    ├── global-conf.{crt,key,p12}
+    ├── management-service.{crt,key,p12}
+    ├── openssl.cnf
+    └── rfc3526group15.pem

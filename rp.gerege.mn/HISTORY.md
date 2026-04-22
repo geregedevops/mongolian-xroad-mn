@@ -85,6 +85,26 @@ RawSubject: csr.RawSubject, // preserve businessCategory
 
 **Watch out:** Just like mgmt SS, EVERY member SS needs this. Add it as the first thing after the wizard, before troubleshooting any registration flow.
 
+## 2026-04-20 — Pre-prod showcase opened port 4000/tcp to public Internet
+
+Same change as on cs/mgmt/ss: `ufw allow 4000/tcp comment 'pre-prod showcase 2026-04-20'`. Producer SS admin panel now reachable from the Internet. Same risk, same remediation (`sudo ufw delete allow 4000/tcp` before go-live).
+
+## 2026-04-22 — State-verification snapshot (taken for monorepo audit) — UFW needs tightening
+
+- **Running services match a healthy producer SS**: `xroad-proxy`, `xroad-proxy-ui-api`, `xroad-confclient`, `xroad-signer`, `xroad-monitor`, `xroad-addon-messagelog`, `postgresql@16-main`. Uptime 3d 1h (boot 2026-04-19 10:00 UTC — consistent with the "2026-04-19 initial config" entry above, *not* a reinstall).
+- **UFW is unusually open on this SS.** All of the following are `ALLOW IN from Anywhere` with **no comment** and **no source IP restriction**:
+  - `22/tcp`
+  - `80/tcp`
+  - `443/tcp`
+  - `4001/tcp`  ← **this is a Central Server port** and has no business being open on an SS; harmless because no process listens on it, but the rule is dead weight and a misleading signal to future operators
+  - `5500/tcp` (expected — SS peer message)
+  - `5577/tcp` (expected — SS peer OCSP)
+  - `4000/tcp` (showcase — see above)
+  
+  **Action before go-live:** `sudo ufw delete allow 4001/tcp` (dead rule), pin `22/tcp` to the admin IP (same one already used on cs.gerege.mn), and verify whether any external IS actually calls this SS on `80`/`443` — the producer flow targets `https://ca.gerege.mn`, not `rp.gerege.mn`, so those two ports may also be unnecessary.
+- **Unattended-upgrades ran twice this morning (2026-04-22 06:50)**, after ~160 consecutive runs on 2026-04-19 between 07:01 and 07:06. X-Road packages are still at 7.8.0-1.ubuntu24.04, so nothing in X-Road was bumped; worth grepping `/var/log/apt/history.log` before attributing any behavior change since 04-19 to config, not packages.
+- **Softtoken** has 2 active p12s (`0806…7EB9`, `8710…38D3`, both 2026-04-19 10:27-10:28). Same AUTH+SIGN pattern as the other member SSs.
+
 ## Watch list for the next operator
 
 - **Three OpenAPI3 services published** (auth-svc, sign-svc, cert-svc) backed by static YAML at `https://ca.gerege.mn/xroad/openapi/`. If the YAML moves or the URL changes, refresh the description in UI → Services → click the OPENAPI3 row → Edit.

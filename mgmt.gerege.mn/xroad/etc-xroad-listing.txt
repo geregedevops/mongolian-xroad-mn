@@ -1,8 +1,9 @@
-/etc/xroad tree on rp.gerege.mn (snapshot 2026-04-22)
+/etc/xroad tree on mgmt.gerege.mn (snapshot 2026-04-22)
 
-Stock `xroad-securityserver` install — no country-profile override,
-no opmonitor. Producer role for GEREGE-ID REST services. Secret-
-bearing subtrees (gpghome, signer/) are listed for navigation only.
+Layout that a fresh `xroad-securityserver` install produces on the
+management-owner SS. Secret-bearing subtrees (gpghome, signer/)
+are listed here for navigation only — no files from them live in
+this repo.
 
 /etc/xroad/
 ├── backup.d/
@@ -21,7 +22,7 @@ bearing subtrees (gpghome, signer/) are listed for navigation only.
 │   ├── confclient-logback{,-service}.xml
 │   ├── local.ini               (proxy-ui-api admin user + GPG backup keyid — **NOT** in repo)
 │   ├── mail.example.yml
-│   ├── proxy.ini
+│   ├── proxy.ini               (SS-wide proxy tunables)
 │   ├── proxy-logback.xml
 │   ├── proxy-ui-api.ini
 │   ├── proxy-ui-api-logback{,-access}.xml
@@ -33,15 +34,16 @@ bearing subtrees (gpghome, signer/) are listed for navigation only.
 ├── devices.ini                 (HSM tokens config)
 ├── globalconf/
 │   ├── instance-identifier     (contents: "MN")
-│   └── MN/                     (synced from cs.gerege.mn every 60s)
-│       ├── private-params.xml
+│   └── MN/
+│       ├── private-params.xml          (synced from cs.gerege.mn every 60s)
 │       ├── private-params.xml.metadata
 │       ├── shared-params.xml
 │       └── shared-params.xml.metadata
 ├── gpghome/                    (GPG keyring for backup encryption — **NEVER** copied)
 │   ├── openpgp-revocs.d/
 │   ├── private-keys-v1.d/
-│   └── pubring.kbx
+│   ├── pubring.kbx
+│   └── trustdb.gpg
 ├── jetty/
 │   ├── clientproxy.xml
 │   ├── ocsp-responder.xml
@@ -60,9 +62,12 @@ bearing subtrees (gpghome, signer/) are listed for navigation only.
 │   ├── keyconf.xml
 │   └── softtoken/
 │       ├── .softtoken.p12                          (seal key)
-│       ├── 08069D6EACCAF356103127E828DF006438EE7EB9.p12
-│       └── 871084508FA00B00E84E6AE89DD3B8146AD838D3.p12
+│       ├── 0DF0E9FEFA83AD0518BC9E33F8958D2F3BDEDDA8.p12
+│       ├── C5331B481FBF77D5E9D8455549D8F76946656B1D.p12
+│       ├── EE5D12FC0063FC23D0DBE0A8DCE71F646FB7F040.p12
+│       └── FE0FC8998D24BC0DCA784B05E5817316C348E39A.p12
 └── ssl/                        (SS-internal TLS bundles — no private keys in repo)
     ├── internal.{crt,key,p12}                      (SS-to-IS TLS)
+    ├── mgmt-backup-pub.asc                         (GPG backup *public* key)
     ├── openssl.cnf
     └── proxy-ui-api.{crt,key,p12}                  (admin UI TLS)

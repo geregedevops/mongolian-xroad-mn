@@ -1,15 +1,18 @@
-/etc/xroad tree on rp.gerege.mn (snapshot 2026-04-22)
+/etc/xroad tree on ss.gerege.mn (snapshot 2026-04-22)
 
-Stock `xroad-securityserver` install — no country-profile override,
-no opmonitor. Producer role for GEREGE-ID REST services. Secret-
-bearing subtrees (gpghome, signer/) are listed for navigation only.
+This SS additionally has the `xroad-securityserver-ee` country profile and
+`xroad-opmonitor` operations-monitoring daemon, so you will see one extra
+`override-securityserver-ee.ini`, one `op-monitor.ini` + logback, one
+`opmonitor.conf` service file, and an `op-monitor` postgres database
+compared to mgmt/rp.
 
 /etc/xroad/
 ├── backup.d/
 │   ├── 00_xroad-confclient
 │   ├── 10_xroad-signer
 │   ├── 20_xroad-monitor
-│   └── 30_xroad-proxy
+│   ├── 30_xroad-proxy
+│   └── 40_xroad-opmonitor      ← EE/opmonitor-specific
 ├── conf.d/
 │   ├── acme.example.yml
 │   ├── addons/
@@ -21,6 +24,9 @@ bearing subtrees (gpghome, signer/) are listed for navigation only.
 │   ├── confclient-logback{,-service}.xml
 │   ├── local.ini               (proxy-ui-api admin user + GPG backup keyid — **NOT** in repo)
 │   ├── mail.example.yml
+│   ├── op-monitor.ini          ← opmonitor-specific
+│   ├── op-monitor-logback.xml  ← opmonitor-specific
+│   ├── override-securityserver-ee.ini   ← EE country-profile overrides
 │   ├── proxy.ini
 │   ├── proxy-logback.xml
 │   ├── proxy-ui-api.ini
@@ -29,7 +35,7 @@ bearing subtrees (gpghome, signer/) are listed for navigation only.
 │   ├── signer-console-logback.xml
 │   └── signer-logback.xml
 ├── configuration-anchor.xml    ← mirrored as xroad/configuration-anchor.xml
-├── db.properties               (postgres creds for serverconf/messagelog — **NOT** in repo)
+├── db.properties               (creds for serverconf/messagelog/op-monitor — **NOT** in repo)
 ├── devices.ini                 (HSM tokens config)
 ├── globalconf/
 │   ├── instance-identifier     (contents: "MN")
@@ -41,7 +47,8 @@ bearing subtrees (gpghome, signer/) are listed for navigation only.
 ├── gpghome/                    (GPG keyring for backup encryption — **NEVER** copied)
 │   ├── openpgp-revocs.d/
 │   ├── private-keys-v1.d/
-│   └── pubring.kbx
+│   ├── pubring.kbx
+│   └── trustdb.gpg
 ├── jetty/
 │   ├── clientproxy.xml
 │   ├── ocsp-responder.xml
@@ -49,9 +56,10 @@ bearing subtrees (gpghome, signer/) are listed for navigation only.
 ├── services/
 │   ├── confclient.conf
 │   ├── global.conf
-│   ├── local.properties        (empty)
+│   ├── local.properties        (35 bytes — opmonitor hook, see file)
 │   ├── messagelog-archiver.conf
 │   ├── monitor.conf
+│   ├── opmonitor.conf          ← opmonitor-specific
 │   ├── proxy.conf
 │   ├── proxy-ui-api.conf
 │   ├── signer.conf
@@ -60,9 +68,10 @@ bearing subtrees (gpghome, signer/) are listed for navigation only.
 │   ├── keyconf.xml
 │   └── softtoken/
 │       ├── .softtoken.p12                          (seal key)
-│       ├── 08069D6EACCAF356103127E828DF006438EE7EB9.p12
-│       └── 871084508FA00B00E84E6AE89DD3B8146AD838D3.p12
+│       ├── 2089F88A0602D5913BDED123996E25438A231CD3.p12
+│       └── DC1CEB7FCC2C201F80B09405BF8F3CE5D67A4A09.p12
 └── ssl/                        (SS-internal TLS bundles — no private keys in repo)
     ├── internal.{crt,key,p12}                      (SS-to-IS TLS)
     ├── openssl.cnf
-    └── proxy-ui-api.{crt,key,p12}                  (admin UI TLS)
+    ├── proxy-ui-api.{crt,key,p12}                  (admin UI TLS)
+    └── ss-backup-pub.asc                           (GPG backup *public* key)
