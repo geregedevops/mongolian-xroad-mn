@@ -66,7 +66,7 @@ sudo ufw allow from 38.180.242.76 to any port 80 proto tcp comment "test.gerege.
 
 ## 2026-04-20 — Pre-prod showcase opened port 4000/tcp to public Internet
 
-Same change as on cs/mgmt/rp: `ufw allow 4000/tcp comment 'pre-prod showcase 2026-04-20'`. Consumer SS admin panel now reachable from the Internet. Same risk, same remediation (`sudo ufw delete allow 4000/tcp` before go-live).
+Same change as on cs/mgmt/rp: `ufw allow 4000/tcp comment 'pre-prod showcase 2026-04-20'`. Consumer SS admin panel was reachable from the Internet until **2026-04-22**, when the rule was deleted in a single batch across all four MN hosts. Admin UI access is back to `ssh -L 14002:localhost:4000 ss.gerege.mn`.
 
 ## 2026-04-22 — State-verification snapshot (taken for monorepo audit)
 

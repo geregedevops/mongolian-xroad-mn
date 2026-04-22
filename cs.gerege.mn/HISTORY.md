@@ -35,7 +35,7 @@ When you delete + re-add a TSA in CS UI, the cert is stored in `shared-params.xm
 
 **Risk:** The CS UI is protected only by form-login (user `xrdadmin`). No mTLS, no IP allow-list, no WAF. A leaked admin password is fully sufficient for anyone on the Internet to impersonate `xrdadmin` and, from there, edit globalconf, revoke members, rotate the CS signing key, etc.
 
-**Watch out:** Revert before go-live: `sudo ufw delete allow 4000/tcp`. The baseline access pattern is `ssh -L 14000:localhost:4000 cs.gerege.mn` and should be restored. Same rule lives on mgmt/ss/rp and must be removed in lockstep.
+**Reverted 2026-04-22** across all four MN hosts (`sudo ufw delete allow 4000/tcp` on cs, mgmt, ss, rp; both IPv4 and IPv6 rules removed). Verified `ufw status` shows no `4000/tcp` entry on any host. Baseline access is back to `ssh -L 14000:localhost:4000 cs.gerege.mn`.
 
 ## 2026-04-22 — State-verification snapshot (taken for monorepo audit)
 

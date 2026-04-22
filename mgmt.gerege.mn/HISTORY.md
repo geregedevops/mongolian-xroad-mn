@@ -50,7 +50,7 @@ AUTH + SIGN keys generated locally, CSRs taken to gerege.mn, signed via `/opt/xr
 
 **Risk:** Same as the cs side — form-login only, no mTLS, no IP allow-list. A compromised UI session on mgmt SS can push `clientReg`/`clientDeletion`/`maintenanceModeEnable` on behalf of the MGMT subsystem and therefore poke the whole control plane.
 
-**Watch out:** Revert with `sudo ufw delete allow 4000/tcp` before the showcase window closes. Same rule exists on cs/ss/rp and must be reverted in lockstep.
+**Reverted 2026-04-22** across all four MN hosts in one batch — `ufw status` no longer lists `4000/tcp` on any of cs/mgmt/ss/rp (IPv4 + IPv6). Admin UI access here is back to `ssh -L 14001:localhost:4000 mgmt.gerege.mn`.
 
 ## 2026-04-22 — State-verification snapshot (taken for monorepo audit)
 
