@@ -233,23 +233,112 @@ Port `14006` matches the per-host SSH-tunnel allocation pattern in
 `docs/topology.md` (cs=14000, mgmt=14005, rp=14003, ss=14004,
 new ss.paygrid.mn = 14006).
 
-## Phase 2 — TBD (operator decision blocks)
+## 2026-05-06 — Phase 2 ran in the same session: wizard + certs + CS-registration
 
-The first-login UI wizard cannot run until the operator decides:
+After the package install completed, the operator drove the
+first-login wizard through the browser at `https://localhost:14006/`
+(SSH tunnel `-L 14006:localhost:4000`). The full provisioning
+sequence finished in one sitting; flagged here are the answers + the
+state CS now holds.
 
-1. **Member class** — almost certainly `COM` (LLC), but could be
-   `GOV` if paygrid is a state body.
-2. **Member code** — the exact registry number for Paygrid LLC.
-   Permanent — appears in every signed message; renaming requires
-   re-registering every cert.
-3. **Subsystem code(s)** — the consumer or producer subsystem(s) this
-   SS will host (e.g. `PAYGRID-CORE`, `PAYGRID-PAY`, …).
-4. **Server code** — proposed `PAYGRID-SS-1` (matches `RP-SS-1`,
-   `CORE-SS-1`, `MGMT-SS-1` naming).
-5. **Software-token PIN** — store in operator's local memory store,
-   not in this repo.
+### Wizard answers
 
-After the wizard, follow the per-server onboarding checklist in
-`README.md` (TSP entry, AUTH+SIGN keys via Gerege CA, register with
-CS via mgmt-service flow, add subsystems, set Internal Servers
-connection type, open CS-side UFW for `4001` + `4002`).
+| Field | Value |
+|---|---|
+| Configuration Anchor | downloaded from `https://cs.gerege.mn:4000` (Settings → System Settings → Configuration Anchor → Download), uploaded as-is. Identical bytes to `ss.gerege.mn/xroad/configuration-anchor.xml`. |
+| Member Name | `Gerege Smart Metering` *(auto-resolved by CS — confirms member was pre-registered on CS as `centerui.security_server_clients` id=18)* |
+| Member Class | `COM` |
+| Member Code | `7181609` |
+| Server Code | `PAYGRID-SS-1` |
+| Token PIN | 16-char alphanumeric, set out-of-band; stored in operator memory only |
+
+### Identity surprise
+
+The repo's pre-install README/HISTORY assumed the owning legal entity
+would be "Paygrid LLC". CS auto-fill on wizard step 2 corrected this
+to **Gerege Smart Metering** (member code `7181609`) — paygrid.mn is
+a brand domain, not a separate company. This is similar to how
+`ss.gerege.mn` is operated by Gerege Core LLC (`6884857`) with the
+domain `gerege.mn` shared across the umbrella. The repo docs were
+updated in the same commit (this entry) to reflect the corrected
+identity.
+
+### TSP entry
+
+Added via UI → Settings → System Parameters → Timestamping Services
+→ Add → `https://tsa.timeserver.mn/`. CS-distributed
+`shared-params.xml` lists `TimeServer.mn TSA Signer` (EC P-256 leaf,
+Gerege-rooted) as the only approved TSA — same as every other SS in
+this instance. Stored as `serverconf.tsp` row id=4.
+
+### Cert flow (AUTH + SIGN)
+
+UI → Keys and Certificates → on the auto-created software token
+`softToken-0`:
+
+- **AUTH key** `FDC3B8E0EAFF92867C0B5DECD2C0FAEA8E9FAC40` (RSA-2048).
+  CSR generated with subject `CN=ss.paygrid.mn, serialNumber=7181609,
+  C=MN, O=Gerege Smart Metering`, signed at the Gerege Issuing CA
+  using the `xroad_auth` profile (`gerege.mn/xroad-ca/xroad-extensions.cnf`).
+  Validity 2026-05-06 → 2028-08-08. AIA → `https://ocsp.gerege.mn/ocsp`,
+  CDP → `https://crl.gerege.mn/issuing-ca.crl`. Imported and
+  **activated** (manual click — wizard imports inactive).
+
+- **SIGN key** `4859B35EB72758B468C90BF0FC20C0CA47B88344` (RSA-2048).
+  CSR signed with `xroad_sign` profile; subject CN=`Gerege Smart Metering`,
+  memberId `MN/COM/7181609`. Same Gerege Issuing CA chain. Imported
+  and activated.
+
+Watch out trap from ss.gerege.mn HISTORY (2026-04-19) — both certs
+must show `active="true"` in `/etc/xroad/signer/keyconf.xml`. The
+"Activate" click is easy to forget and produces no obvious UI
+warning when skipped.
+
+### CS-side registration of AUTH cert
+
+Submitted from SS UI → Keys and Certificates → expand AUTH key →
+Register. The auth-cert-reg request hit `cs.gerege.mn:4001`
+(centerregistration-service); operator approved on the CS UI under
+Management Requests. CS now lists this SS in
+`centerui.security_servers` as id=7, server_code=`PAYGRID-SS-1`,
+owner_id=18, address=`ss.paygrid.mn`. AUTH cert keyconf status
+flipped from `registration in progress` to `registered`.
+
+### CS UFW
+
+Opened CS UFW for `38.180.254.231` on port `4002` (mgmt service
+backend) to mirror the existing per-SS pattern (`mgmt.gerege.mn`,
+`rp.gerege.mn`, `ss.gerege.mn` already had this rule). Port `4001`
+(auth-cert reg) was already `ALLOW IN Anywhere` so the AUTH
+cert reg flow worked immediately. Verified post-rule with curl from
+ss.paygrid.mn:
+
+```
+http://cs.gerege.mn:4001/      → 400 Bad Request (TCP open, request rejected = OK)
+https://cs.gerege.mn:4002/     → 403 Forbidden (TCP open, TLS+cert auth required = OK)
+```
+
+Before the rule was added the latter was a 5-second timeout — UFW
+was dropping the SYN. Standard pattern for adding a new member SS
+to instance MN.
+
+## Open loops (Phase 3)
+
+1. **Pick a subsystem code** (e.g. `PAYGRID-CORE`, `METERING`, `PAY`)
+   and add via UI → Clients → Add Subsystem → Register. Set Internal
+   Servers connection type per the IS calling pattern. Without at
+   least one subsystem this SS can sign messages but has nothing to
+   send/receive.
+2. **Decide consumer or producer** for the first subsystem:
+   - **Consumer**: ask Gerege Systems LLC to grant
+     `MN/COM/7181609/<subsystem>` as a service client on rp.gerege.mn
+     for whatever GEREGE-ID services paygrid needs.
+   - **Producer**: host an OpenAPI3 description on a public TLS URL
+     (mirror `https://ca.gerege.mn/xroad/openapi/...`), wire via UI →
+     Services → Add REST → OpenAPI 3 Description.
+3. **Add to `monitor.x-road.mn`** (see `reference_xroad_monitor.md`):
+   - install `prometheus-node-exporter` on this host
+   - UFW allow `from 38.180.242.76 to any port 9100/tcp`
+   - append target to `/opt/xroad-monitor/prometheus.yml`
+     `xroad-nodes` job
+   - direct public IP, no autossh tunnel needed (unlike ss.gerege.mn).

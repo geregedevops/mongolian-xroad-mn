@@ -1,26 +1,26 @@
 # ss.paygrid.mn — Member Security Server (paygrid.mn)
 
 **Public IP:** `38.180.254.231`
-**Owner:** Paygrid LLC — `MN/COM/<TBD-member-code>` *(member class + registry number to be filled in before completing the wizard; see HISTORY 2026-05-06)*
+**Owner:** Gerege Smart Metering — `MN/COM/7181609` *(brand domain `paygrid.mn`; legal entity is Gerege Smart Metering, registered on CS as `id=18` on 2026-05-06)*
 **Member-server code:** `PAYGRID-SS-1`
 **X-Road version:** 7.8.0 (`xroad-securityserver`, generic profile, on Ubuntu 24.04 LTS)
-**Role:** Member Security Server for the `paygrid.mn` ecosystem on the Mongolian X-Road instance `MN`. Initial direction: **consumer + producer hybrid** — paygrid IS calls partner producers (e.g. GEREGE-ID on rp.gerege.mn) and may publish its own services later. Final role split is part of the Phase-2 onboarding decision.
+**Role:** Member Security Server for the `paygrid.mn` (Gerege Smart Metering) ecosystem on the Mongolian X-Road instance `MN`. Initial direction: **consumer + producer hybrid** — paygrid IS calls partner producers (e.g. GEREGE-ID on rp.gerege.mn) and may publish its own metering services later. Final role split is part of the Phase-2 onboarding decision.
 
 ## Why a separate SS for paygrid
 
-Paygrid runs its own information system stack and is a separate legal entity from Gerege Systems / Gerege Core. Putting paygrid into its own SS gives:
+Gerege Smart Metering runs its own information system stack and is a separate legal entity from Gerege Systems LLC and Gerege Core LLC, even though they sit under the broader Гэрэгэ corporate umbrella. Putting paygrid into its own SS gives:
 
-- A distinct member identity (`MN/COM/<paygrid-code>`) on every signed X-Road message — no commingling with `MN/COM/6235972` (Gerege Systems) or `MN/COM/6884857` (Gerege Core).
-- Independent AUTH + SIGN cert lifecycle and key custody under paygrid's control.
+- A distinct member identity (`MN/COM/7181609`) on every signed X-Road message — no commingling with `MN/COM/6235972` (Gerege Systems) or `MN/COM/6884857` (Gerege Core).
+- Independent AUTH + SIGN cert lifecycle and key custody under Gerege Smart Metering's control (different software-token PIN, different P12 lineage).
 - A clean firewall + ACL boundary: paygrid's IS hosts can only reach this SS, not the gerege-side SSes.
-- Future-proofs paygrid for tri-party governance: when CS ownership shifts to Цахим хөгжлийн яам, paygrid's member registration on CS stays valid because the SS identity is portable.
+- Future-proofs the member for tri-party governance: when CS ownership shifts to Цахим хөгжлийн яам, the member registration on CS stays valid because the SS identity (`MN/COM/7181609`) is portable.
 
-## Subsystems on this SS *(planned — not yet REGISTERED)*
+## Subsystems on this SS
 
-| Subsystem code        | Status   | Purpose                                                                          |
-|-----------------------|----------|----------------------------------------------------------------------------------|
-| (owner)               | TBD      | Paygrid LLC owner client                                                         |
-| `<TBD-subsystem-1>`   | TBD      | Primary paygrid subsystem (e.g. `PAYGRID-CORE`, `PAYGRID-PAY`) — operator choice |
+| Subsystem code        | Status     | Purpose                                                                          |
+|-----------------------|------------|----------------------------------------------------------------------------------|
+| (owner)               | REGISTERED | Gerege Smart Metering owner client (no services published yet)                   |
+| `<TBD-subsystem-1>`   | TBD        | Primary paygrid subsystem (e.g. `PAYGRID-CORE`, `METERING`) — operator choice    |
 
 ## Listening ports (post-firewall plan)
 
@@ -35,27 +35,47 @@ Paygrid runs its own information system stack and is a separate legal entity fro
 
 UFW rules will mirror the ss.gerege.mn pattern but pinned to paygrid's IS host(s) and Gerege admin source-IPs. **Do NOT** open port 4000 to public — even briefly. The 2026-04-20 pre-prod showcase exposure on cs/mgmt/rp/ss was rolled back the same week (commits 8fc52a0, 1e327e7) and is not repeated here.
 
-## Required onboarding sequence (Phase 2 — pending)
+## Onboarding sequence — what was done 2026-05-06
 
-In the same playbook order as rp.gerege.mn / ss.gerege.mn:
+The full playbook ran in one session — see `HISTORY.md` for the
+detailed log. Summary of the steps and where each one ended up:
 
-1. **Decide member identity** — member class (almost certainly `COM` for an LLC), member code (paygrid registry number), subsystem code(s).
-2. **Run the first-login wizard** at `https://ss.paygrid.mn:4000` after `ssh -L 14006:localhost:4000 ss.paygrid.mn`. Provide:
-   - Configuration anchor → uploaded from `https://cs.gerege.mn:4000` *(Settings → System Settings → Configuration Anchor download)*.
-   - Software-token PIN — store in operator's local memory store, never in repo.
-   - Member class / code, server code (`PAYGRID-SS-1`).
-3. **Add TSP entry** → `https://timeserver.mn`. Without it the signer refuses any signed-message flow with `no_timestamping_provider_found`.
-4. **Generate AUTH + SIGN keys + CSRs** → sign at the Gerege CA (`xroad_auth` / `xroad_sign` profiles in `gerege.mn/xroad-ca/xroad-extensions.cnf`) → import + activate. Both must be `active="true"` in `keyconf.xml`; the wizard imports them as inactive.
-5. **Register member + AUTH cert with CS** via the management-service flow (`mgmt.gerege.mn` MANAGEMENT subsystem). CS-side approval is required (`opsadmin` on cs.gerege.mn).
-6. **Add subsystems** → Register each → set Internal Servers connection type. For consumer-side calls from paygrid IS over plain HTTP, set the type to `HTTP` (the same trap that bit ss.gerege.mn TEST-DEMO on 2026-04-19).
-7. **Open CS-side UFW** for paygrid SS public IP on cs.gerege.mn ports `4001` (globalconf) + `4002` (mgmt service backend).
-8. **Grant access on producer SSes** that paygrid will consume — e.g. add `MN/COM/<paygrid-code>/<subsystem>` as a service-client on rp.gerege.mn → GEREGE-ID services tab.
+| Step | Status | Notes |
+|---|---|---|
+| Configuration anchor → uploaded from `cs.gerege.mn` | ✅ done | `/etc/xroad/configuration-anchor.xml` present; globalconf `MN/` populated. |
+| Owner Member registered (`MN/COM/7181609` Gerege Smart Metering) | ✅ done | wizard step 2; CS already had the member pre-registered (id=18). |
+| Server Code `PAYGRID-SS-1` | ✅ done | wizard step 2. |
+| Software-token PIN | ✅ set | stored in operator memory; not in repo. |
+| TSP entry → `https://tsa.timeserver.mn/` (TimeServer.mn TSA Signer) | ✅ added | `serverconf.tsp` row id=4. |
+| AUTH key + CSR + cert (signed by Gerege Issuing CA, valid 2026-05-06 → 2028-08-08) | ✅ active | `xroad_auth` profile; CN=`ss.paygrid.mn`, serialNumber=7181609. |
+| SIGN key + CSR + cert (signed by Gerege Issuing CA) | ✅ active | `xroad_sign` profile; subject CN=`Gerege Smart Metering`, memberId `MN/COM/7181609`. |
+| AUTH cert registered with CS | ✅ approved | CS `centerui.security_servers` row id=7. |
+| CS-side UFW for `38.180.254.231` on `4001/4002` | ✅ open | rule added 2026-05-06 to mirror existing per-SS pattern. |
+| Subsystems | ⏳ pending | operator decision; see Phase 3 below. |
+
+### Phase 3 — what still needs operator decisions
+
+1. **First subsystem** — pick a code (e.g. `PAYGRID-CORE`, `METERING`,
+   `PAY`). Add Client → Register → Internal Servers → set connection type
+   (`HTTP` if the IS calls SS over plain HTTP from a docker network — same
+   pattern that bit ss.gerege.mn TEST-DEMO on 2026-04-19).
+2. **What services will paygrid consume?** If GEREGE-ID auth/sign/cert,
+   ask Gerege Systems LLC to grant `MN/COM/7181609/<subsystem>` as a
+   service client on rp.gerege.mn → GEREGE-ID services tab.
+3. **What services will paygrid publish?** If smart-metering APIs, host
+   the OpenAPI3 description on a public TLS endpoint (mirror the
+   `https://ca.gerege.mn/xroad/openapi/...` pattern), wire UI →
+   Services → Add REST → OpenAPI 3 Description.
+4. **Add to monitor.x-road.mn** — install `prometheus-node-exporter`,
+   add UFW rule allowing `38.180.242.76` to `:9100`, append to
+   `prometheus.yml` `xroad-nodes` job. Same pattern as the existing 6
+   hosts; no autossh tunnel needed (direct public IP, no NAT).
 
 ## What lives in this folder
 
 - `README.md` — this file.
 - `HISTORY.md` — install + operational log; every incident, fix, and gotcha.
-- `xroad/configuration-anchor.xml` — copied from CS after wizard step 2 (Phase 2).
+- `xroad/configuration-anchor.xml` — copy of `/etc/xroad/configuration-anchor.xml` (CS-issued, identical to ss.gerege.mn / rp.gerege.mn copies).
 - `xroad/conf.d-local.ini` — sanitized snapshot of `/etc/xroad/conf.d/local.ini`.
 - `xroad/etc-listing.txt` — listing of `/etc/xroad/conf.d` so future operators know what to grep for.
 

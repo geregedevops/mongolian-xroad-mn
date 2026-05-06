@@ -24,9 +24,9 @@ The instance identifier is **`MN`**. The Central Server lives at **cs.gerege.mn*
 │   │      auth-svc, sign-svc,  │                                       │     │
 │   │      cert-svc REST OpenAPI│                                       │     │
 │   ├───────────────────────────┴───────────────────────────────────────┤     │
-│   │ Member: Paygrid LLC (COM/<TBD>)  ss.paygrid.mn — installed        │     │
-│   │   2026-05-06, awaiting first-login wizard for member-code +       │     │
-│   │   subsystem decisions. Direct public IP (no NAT).                 │     │
+│   │ Member: Gerege Smart Metering (COM/7181609)  ss.paygrid.mn        │     │
+│   │   REGISTERED on CS 2026-05-06; PAYGRID-SS-1; brand domain         │     │
+│   │   paygrid.mn; subsystem TBD; direct public IP (no NAT).           │     │
 │   └───────────────────────────────────────────────────────────────────┘     │
 │                                                                             │
 │   Information system behind GEREGE-ID:                                      │
@@ -66,7 +66,7 @@ Each per-server folder has its own `README.md` describing the role, the ports it
 | `mgmt.gerege.mn`    | 38.180.255.177 | Management SS (Gerege Systems LLC owner SS)                      |
 | `rp.gerege.mn`      | 38.180.251.163 | Producer SS (GEREGE-ID services)                                 |
 | `ss.gerege.mn`      | 66.181.175.134 | Consumer SS (TEST-DEMO + future Gerege Core consumers)           |
-| `ss.paygrid.mn`     | 38.180.254.231 | Member SS for Paygrid LLC (installed 2026-05-06, wizard pending) |
+| `ss.paygrid.mn`     | 38.180.254.231 | Member SS for Gerege Smart Metering / paygrid.mn (REGISTERED 2026-05-06)|
 | `gerege.mn`         | 38.180.136.97  | Gerege Root CA, Issuing CA, OCSP, CRL, sign portal, /xroad/v1 IS |
 | `timeserver.mn`     | 38.180.203.29  | TSA leaf signed by Gerege Root CA                                |
 
