@@ -23,7 +23,11 @@ The instance identifier is **`MN`**. The Central Server lives at **cs.gerege.mn*
 │   │   └─ GEREGE-ID subsystem  │   └─ TEST-DEMO subsystem              │     │
 │   │      auth-svc, sign-svc,  │                                       │     │
 │   │      cert-svc REST OpenAPI│                                       │     │
-│   └───────────────────────────┴───────────────────────────────────────┘     │
+│   ├───────────────────────────┴───────────────────────────────────────┤     │
+│   │ Member: Paygrid LLC (COM/<TBD>)  ss.paygrid.mn — installed        │     │
+│   │   2026-05-06, awaiting first-login wizard for member-code +       │     │
+│   │   subsystem decisions. Direct public IP (no NAT).                 │     │
+│   └───────────────────────────────────────────────────────────────────┘     │
 │                                                                             │
 │   Information system behind GEREGE-ID:                                      │
 │   ca.gerege.mn:443  ──► nginx (gerege.mn host) ──► /xroad/v1/* in           │
@@ -47,6 +51,7 @@ mongolian-xroad-mn/
 ├── mgmt.gerege.mn/            Management Security Server (Gerege Systems LLC owner SS)
 ├── rp.gerege.mn/              Producer SS publishing GEREGE-ID auth/sign/cert services
 ├── ss.gerege.mn/              Consumer SS owning the TEST-DEMO subsystem (Gerege Core LLC)
+├── ss.paygrid.mn/             Member SS for Paygrid LLC (xroad-securityserver 7.8.0, wizard pending)
 ├── gerege.mn/                 CA + OCSP + CRL + sign portal + X-Road IS for GEREGE-ID
 └── timeserver.mn/             RFC 3161 timestamping authority (Sigstore TSA, Gerege-rooted)
 ```
@@ -61,6 +66,7 @@ Each per-server folder has its own `README.md` describing the role, the ports it
 | `mgmt.gerege.mn`    | 38.180.255.177 | Management SS (Gerege Systems LLC owner SS)                      |
 | `rp.gerege.mn`      | 38.180.251.163 | Producer SS (GEREGE-ID services)                                 |
 | `ss.gerege.mn`      | 66.181.175.134 | Consumer SS (TEST-DEMO + future Gerege Core consumers)           |
+| `ss.paygrid.mn`     | 38.180.254.231 | Member SS for Paygrid LLC (installed 2026-05-06, wizard pending) |
 | `gerege.mn`         | 38.180.136.97  | Gerege Root CA, Issuing CA, OCSP, CRL, sign portal, /xroad/v1 IS |
 | `timeserver.mn`     | 38.180.203.29  | TSA leaf signed by Gerege Root CA                                |
 

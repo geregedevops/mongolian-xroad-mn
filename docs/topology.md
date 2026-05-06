@@ -1,17 +1,20 @@
 # Topology — Mongolia X-Road (instance MN)
 
-Frozen as of 2026-04-19.
+Frozen as of 2026-05-06 (added `ss.paygrid.mn` install).
 
 ## Hosts and X-Road identifiers
 
 | Host                | IP             | xRoadInstance | memberClass | memberCode | subsystemCode | serverCode  | Role                |
 |---------------------|----------------|---------------|-------------|-----------:|---------------|-------------|---------------------|
-| `cs.gerege.mn`      | 38.180.203.234 | MN            | —           |          — | —             | —           | Central Server      |
-| `mgmt.gerege.mn`    | 38.180.255.177 | MN            | COM         |    6235972 | MANAGEMENT    | MGMT-SS-1   | Management SS       |
-| `rp.gerege.mn`      | 38.180.251.163 | MN            | COM         |    6235972 | GEREGE-ID     | RP-SS-1     | Producer SS         |
-| `ss.gerege.mn`      | 66.181.175.134 | MN            | COM         |    6884857 | TEST-DEMO     | CORE-SS-1   | Consumer SS         |
+| `cs.gerege.mn`      | 38.180.203.234 | MN            | —           |          — | —             | —             | Central Server      |
+| `mgmt.gerege.mn`    | 38.180.255.177 | MN            | COM         |    6235972 | MANAGEMENT    | MGMT-SS-1     | Management SS       |
+| `rp.gerege.mn`      | 38.180.251.163 | MN            | COM         |    6235972 | GEREGE-ID     | RP-SS-1       | Producer SS         |
+| `ss.gerege.mn`      | 66.181.175.134 | MN            | COM         |    6884857 | TEST-DEMO     | CORE-SS-1     | Consumer SS         |
+| `ss.paygrid.mn`     | 38.180.254.231 | MN            | COM         |       *TBD* | *TBD*        | PAYGRID-SS-1  | Member SS (paygrid) |
 
-(`memberCode` 6235972 = Gerege Systems LLC; 6884857 = Gerege Core LLC.)
+(`memberCode` 6235972 = Gerege Systems LLC; 6884857 = Gerege Core LLC;
+`ss.paygrid.mn` member identity TBD — installed 2026-05-06, awaiting
+first-login wizard with paygrid registry number.)
 
 ## Listening ports (after host firewalls)
 
@@ -33,6 +36,11 @@ Frozen as of 2026-04-19.
 | ss.gerege.mn        |       80 | xroad-proxy IS gateway (consumer REST)     | UFW-allowlisted IS hosts only (test.gerege.mn 38.180.242.76)  |
 | ss.gerege.mn        |      443 | xroad-proxy IS gateway with TLS            | (same)                                                        |
 | ss.gerege.mn        |     4000 | xroad admin UI                             | localhost (`-L 14004:localhost:4000`)                         |
+| ss.paygrid.mn       |     5500 | xroad-proxy server-proxy                   | public                                                        |
+| ss.paygrid.mn       |     5577 | xroad-proxy OCSP                           | public                                                        |
+| ss.paygrid.mn       |     8080 | xroad-proxy IS gateway (consumer REST)     | UFW-blocked until paygrid IS host is decided                  |
+| ss.paygrid.mn       |     8443 | xroad-proxy IS gateway with TLS            | (same)                                                        |
+| ss.paygrid.mn       |     4000 | xroad admin UI                             | localhost (`-L 14006:localhost:4000`)                         |
 | gerege.mn           |      443 | nginx (gerege.mn, ca, ocsp, crl, sign)     | public                                                        |
 | gerege.mn           |     8080 | eid-gerege-backend (behind ca.gerege.mn)   | nginx only                                                    |
 | timeserver.mn       |      443 | nginx → Sigstore TSA (RFC 3161)            | public                                                        |
