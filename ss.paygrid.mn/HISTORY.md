@@ -503,14 +503,12 @@ $ ufw status numbered (paygrid SS)
 [5] 8443/tcp  ALLOW IN  38.180.254.229  # paygrid.mn IS client
 ```
 
-### IS-side wiring (Phase 4 — paygrid backend team)
+### End-to-end smoke test ✅ passed 2026-05-07
 
-The paygrid Go backend (`/opt/paygrid-mn/paygrid-go/`) makes outbound
-X-Road calls for EIDMONGOL auth + sign. Its HTTP client must
-present the client cert + key when calling
-`https://ss.paygrid.mn:8443/r1/MN/COM/6235972/EIDMONGOL/...`.
+After the operator uploaded `paygrid-is-client.crt` to the SS UI
+and verified the SHA256 hash matched, ran the canonical
+`listMethods` smoke test from the IS host:
 
-Reference test (manual):
 ```bash
 curl --cert /etc/paygrid/xroad-is-tls/paygrid-is-client.crt \
      --key  /etc/paygrid/xroad-is-tls/paygrid-is-client.key \
@@ -519,10 +517,62 @@ curl --cert /etc/paygrid/xroad-is-tls/paygrid-is-client.crt \
      https://ss.paygrid.mn:8443/r1/MN/COM/6235972/EIDMONGOL/listMethods
 ```
 
-`listMethods` is the NIIS universal X-Road metaservice — returns
-the list of services that the target subsystem publishes
-(`auth-svc`, `sign-svc` for EIDMONGOL). HTTP 200 + JSON =
-mTLS + ACL + X-Road routing all working.
+**Result:** HTTP 200, 839 ms, 563 bytes JSON. The response listed
+exactly the two services PAYGRID-CORE has been granted access to:
+
+```json
+{"service":[
+  {"member_class":"COM","member_code":"6235972",
+   "subsystem_code":"EIDMONGOL","service_code":"sign-svc",
+   "endpoint_list":[{"method":"POST","path":"/sign/initiate"},
+                    {"method":"GET","path":"/sign/session/*"}],
+   "object_type":"SERVICE","service_type":"OPENAPI",
+   "xroad_instance":"MN"},
+  {"member_class":"COM","member_code":"6235972",
+   "subsystem_code":"EIDMONGOL","service_code":"auth-svc",
+   "endpoint_list":[{"method":"POST","path":"/auth/initiate"},
+                    {"method":"GET","path":"/auth/session/*"}],
+   "object_type":"SERVICE","service_type":"OPENAPI",
+   "xroad_instance":"MN"}
+]}
+```
+
+This single call proves all five layers of the integration:
+
+1. paygrid.mn IS → `ss.paygrid.mn:8443` **mTLS** handshake (the
+   uploaded client cert is recognised by NIIS' pinned-cert
+   matcher).
+2. ss.paygrid.mn → `rp.gerege.mn:5500` X-Road peer-SS message
+   (auth + sign certs both `active` + CS-registered).
+3. rp.gerege.mn ACL check on `MN/COM/7181609/PAYGRID-CORE` for
+   each EIDMONGOL service (yesterday's grants).
+4. EIDMONGOL `listMethods` filtered by ACL — returns 2 services
+   (auth-svc + sign-svc), no cert-svc, exactly as expected for
+   the v2 pattern.
+5. Reverse path back to the IS over the same channels.
+
+`listMethods` is **ACL-aware** — if the grants were missing the
+response would be an empty `service` array. Useful diagnostic
+for debugging future ACL / cert / routing problems: the call
+returns *something* if ANY layer below the ACL check works, and
+the contents tell you whether the ACL did or didn't.
+
+**Round-trip 839 ms is the cold-path number** (first-time TLS
+session, confclient cache miss, peer-SS handshake). Subsequent
+calls reuse session + cached globalconf and should land
+< 300 ms.
+
+### IS-side wiring (Phase 4 — paygrid backend team)
+
+The paygrid Go backend (`/opt/paygrid-mn/paygrid-go/`) makes outbound
+X-Road calls for EIDMONGOL auth + sign. Its HTTP client must
+present the client cert + key when calling
+`https://ss.paygrid.mn:8443/r1/MN/COM/6235972/EIDMONGOL/...`.
+Reference for the Go backend (a `tls.Config` with
+`Certificates: []tls.Certificate{cert}` and
+`InsecureSkipVerify: true` on the SS's self-signed server cert,
+or a custom RootCAs list pointing at the SS's
+`/etc/xroad/ssl/proxy-ui-api.crt`).
 
 ### Why no SS→IS cert upload on the producer direction (yet)
 
