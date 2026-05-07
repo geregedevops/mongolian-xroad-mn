@@ -1,6 +1,7 @@
 # Topology — Mongolia X-Road (instance MN)
 
-Frozen as of 2026-05-06 (added `ss.paygrid.mn` install).
+Frozen as of 2026-05-07 (`ss.paygrid.mn` install + first subsystem
+`PAYGRID-CORE` registered).
 
 ## Hosts and X-Road identifiers
 
@@ -10,12 +11,12 @@ Frozen as of 2026-05-06 (added `ss.paygrid.mn` install).
 | `mgmt.gerege.mn`    | 38.180.255.177 | MN            | COM         |    6235972 | MANAGEMENT    | MGMT-SS-1     | Management SS       |
 | `rp.gerege.mn`      | 38.180.251.163 | MN            | COM         |    6235972 | GEREGE-ID     | RP-SS-1       | Producer SS         |
 | `ss.gerege.mn`      | 66.181.175.134 | MN            | COM         |    6884857 | TEST-DEMO     | CORE-SS-1     | Consumer SS         |
-| `ss.paygrid.mn`     | 38.180.254.231 | MN            | COM         |    7181609 | (none yet)    | PAYGRID-SS-1  | Member SS (paygrid) |
+| `ss.paygrid.mn`     | 38.180.254.231 | MN            | COM         |    7181609 | PAYGRID-CORE  | PAYGRID-SS-1  | Member SS (paygrid) |
 
 (`memberCode` 6235972 = Gerege Systems LLC; 6884857 = Gerege Core LLC;
-7181609 = Gerege Smart Metering, brand domain `paygrid.mn`. The
-PAYGRID-SS-1 owner client was REGISTERED on CS 2026-05-06; first
-subsystem still TBD.)
+7181609 = Gerege Smart Metering, brand domain `paygrid.mn`.
+PAYGRID-SS-1 owner + PAYGRID-CORE subsystem REGISTERED on CS
+2026-05-06 / 2026-05-07.)
 
 ## Listening ports (after host firewalls)
 

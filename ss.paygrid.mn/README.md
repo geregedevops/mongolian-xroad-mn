@@ -17,10 +17,10 @@ Gerege Smart Metering runs its own information system stack and is a separate le
 
 ## Subsystems on this SS
 
-| Subsystem code        | Status     | Purpose                                                                          |
-|-----------------------|------------|----------------------------------------------------------------------------------|
-| (owner)               | REGISTERED | Gerege Smart Metering owner client (no services published yet)                   |
-| `<TBD-subsystem-1>`   | TBD        | Primary paygrid subsystem (e.g. `PAYGRID-CORE`, `METERING`) — operator choice    |
+| Subsystem code  | Status     | Purpose                                                                |
+|-----------------|------------|------------------------------------------------------------------------|
+| (owner)         | REGISTERED | Gerege Smart Metering owner client (no services published yet)         |
+| `PAYGRID-CORE`  | REGISTERED | PayGrid Core System — primary paygrid.mn subsystem. Display name set in NIIS UI; CS row id=19 (centerui.security_server_clients), bound to PAYGRID-SS-1 via server_clients id=14. |
 
 ## Listening ports (post-firewall plan)
 
@@ -51,25 +51,31 @@ detailed log. Summary of the steps and where each one ended up:
 | SIGN key + CSR + cert (signed by Gerege Issuing CA) | ✅ active | `xroad_sign` profile; subject CN=`Gerege Smart Metering`, memberId `MN/COM/7181609`. |
 | AUTH cert registered with CS | ✅ approved | CS `centerui.security_servers` row id=7. |
 | CS-side UFW for `38.180.254.231` on `4001/4002` | ✅ open | rule added 2026-05-06 to mirror existing per-SS pattern. |
-| Subsystems | ⏳ pending | operator decision; see Phase 3 below. |
+| Subsystems → `PAYGRID-CORE` registered | ✅ done | 2026-05-07; serverconf id=6, CS centerui id=19, server_clients id=14 (bound to PAYGRID-SS-1). |
 
 ### Phase 3 — what still needs operator decisions
 
-1. **First subsystem** — pick a code (e.g. `PAYGRID-CORE`, `METERING`,
-   `PAY`). Add Client → Register → Internal Servers → set connection type
-   (`HTTP` if the IS calls SS over plain HTTP from a docker network — same
-   pattern that bit ss.gerege.mn TEST-DEMO on 2026-04-19).
-2. **What services will paygrid consume?** If GEREGE-ID auth/sign/cert,
-   ask Gerege Systems LLC to grant `MN/COM/7181609/<subsystem>` as a
-   service client on rp.gerege.mn → GEREGE-ID services tab.
-3. **What services will paygrid publish?** If smart-metering APIs, host
+1. **What services will paygrid consume?** If GEREGE-ID auth/sign/cert,
+   ask Gerege Systems LLC to grant `MN/COM/7181609/PAYGRID-CORE` as a
+   service client on rp.gerege.mn → GEREGE-ID services tab. Until that
+   ACL is added, every `auth-svc/sign-svc/cert-svc` call from
+   `ss.paygrid.mn` is denied at rp.gerege.mn with `Service-clients ACL
+   denied`.
+2. **What services will paygrid publish?** If smart-metering APIs, host
    the OpenAPI3 description on a public TLS endpoint (mirror the
    `https://ca.gerege.mn/xroad/openapi/...` pattern), wire UI →
-   Services → Add REST → OpenAPI 3 Description.
+   Services → Add REST → OpenAPI 3 Description on the PAYGRID-CORE
+   subsystem.
+3. **Internal Servers connection type** — once paygrid IS host is
+   chosen, set `HTTP` (plain) or `HTTPS` (TLS) on PAYGRID-CORE based
+   on how the IS calls this SS. Same trap that bit ss.gerege.mn
+   TEST-DEMO on 2026-04-19 (HTTPS by default, IS called over HTTP →
+   `Client specifies HTTPS but did not supply TLS certificate`).
 4. **Add to monitor.x-road.mn** — install `prometheus-node-exporter`,
-   add UFW rule allowing `38.180.242.76` to `:9100`, append to
-   `prometheus.yml` `xroad-nodes` job. Same pattern as the existing 6
-   hosts; no autossh tunnel needed (direct public IP, no NAT).
+   add UFW rule allowing `38.180.242.76` to `:9100`, append target to
+   `/opt/xroad-monitor/prometheus.yml` `xroad-nodes` job. Same pattern
+   as the existing 6 hosts; no autossh tunnel needed (direct public
+   IP, no NAT).
 
 ## What lives in this folder
 

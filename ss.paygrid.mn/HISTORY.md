@@ -322,21 +322,74 @@ Before the rule was added the latter was a 5-second timeout — UFW
 was dropping the SYN. Standard pattern for adding a new member SS
 to instance MN.
 
+## 2026-05-07 — First subsystem `PAYGRID-CORE` registered
+
+Operator chose `PAYGRID-CORE` as the first subsystem code on this SS.
+NIIS REST API is locked behind a CSRF-pattern session that needed an
+API key to drive remotely (BasicAuth returns 401, form-login
+JSESSIONID + X-XSRF-TOKEN still 403); rather than fight the auth
+flow, the registration was driven through the UI in five clicks:
+
+```
+Clients → Add client → Subsystem
+   Member Name : Gerege Smart Metering   (auto-fill from owner)
+   Member Class: COM                     (auto)
+   Member Code : 7181609                 (auto)
+   Subsystem Code: PAYGRID-CORE
+[Add] → status `saved`
+[Register] on the new row → CS-side approval by opsadmin → status `REGISTERED`
+```
+
+Display name on CS UI: "PayGrid Core System" (free-form label, does
+NOT change the X-Road identifier). The technical identifier is and
+remains `MN/COM/7181609/PAYGRID-CORE`.
+
+Final state, both sides:
+
+```
+ss.paygrid.mn  serverconf.client                id=6  status=registered  type=SUBSYSTEM
+                                                 MN/COM/7181609/PAYGRID-CORE
+cs.gerege.mn   centerui.security_server_clients id=19 type=Subsystem    name="PayGrid Core System"
+cs.gerege.mn   centerui.server_clients          id=14 server=7 (PAYGRID-SS-1) → client=19
+```
+
+The `clientReg` request transited the standard mgmt-service path:
+
+```
+ss.paygrid.mn proxy
+  → X-Road peer message MN/COM/7181609/(owner) → MN/COM/6235972/MANAGEMENT/clientReg
+  → mgmt.gerege.mn:5500
+  → mgmt SS proxies to https://cs.gerege.mn:4002/managementservice/manage/
+  → CS centerregistration-service inserts into centerui.requests
+  → opsadmin clicks Approve in CS UI
+  → server_clients row materialised, request_processings closed
+```
+
+This is the canonical NIIS flow — **not** the legacy direct
+`SS → CS:4002` shortcut. `ss.paygrid.mn` was added to the CS
+`4002` UFW allow-list yesterday (2026-05-06) for completeness, but
+the `clientReg` itself never used that path because it is wrapped in
+an X-Road peer message and only mgmt SS opens a TCP connection to
+CS:4002.
+
 ## Open loops (Phase 3)
 
-1. **Pick a subsystem code** (e.g. `PAYGRID-CORE`, `METERING`, `PAY`)
-   and add via UI → Clients → Add Subsystem → Register. Set Internal
-   Servers connection type per the IS calling pattern. Without at
-   least one subsystem this SS can sign messages but has nothing to
-   send/receive.
-2. **Decide consumer or producer** for the first subsystem:
-   - **Consumer**: ask Gerege Systems LLC to grant
-     `MN/COM/7181609/<subsystem>` as a service client on rp.gerege.mn
-     for whatever GEREGE-ID services paygrid needs.
-   - **Producer**: host an OpenAPI3 description on a public TLS URL
-     (mirror `https://ca.gerege.mn/xroad/openapi/...`), wire via UI →
-     Services → Add REST → OpenAPI 3 Description.
-3. **Add to `monitor.x-road.mn`** (see `reference_xroad_monitor.md`):
+1. **Service-client grants on rp.gerege.mn** — ask Gerege Systems
+   LLC to add `MN/COM/7181609/PAYGRID-CORE` to the access list of
+   `auth-svc`, `sign-svc`, `cert-svc` on `GEREGE-ID` (rp.gerege.mn UI
+   → Clients → GEREGE-ID → Services → expand each service → Add
+   subjects). Until then every paygrid call to GEREGE-ID is denied
+   with `Service-clients ACL denied`.
+2. **PAYGRID-CORE Internal Servers connection type** — defaults to
+   HTTPS-with-cert. If paygrid IS calls this SS over plain HTTP from
+   inside its own docker network, switch to `HTTP` to avoid the
+   `Client (SUBSYSTEM:MN/COM/7181609/PAYGRID-CORE) specifies HTTPS
+   but did not supply TLS certificate` error.
+3. **Producer-side OpenAPI3** — if paygrid eventually publishes
+   metering APIs, host the YAML on a public TLS URL (mirror
+   `https://ca.gerege.mn/xroad/openapi/...`) and add via UI →
+   Services → Add REST → OpenAPI 3 Description on PAYGRID-CORE.
+4. **Add to `monitor.x-road.mn`** (see `reference_xroad_monitor.md`):
    - install `prometheus-node-exporter` on this host
    - UFW allow `from 38.180.242.76 to any port 9100/tcp`
    - append target to `/opt/xroad-monitor/prometheus.yml`

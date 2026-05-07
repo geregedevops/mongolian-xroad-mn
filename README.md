@@ -26,7 +26,7 @@ The instance identifier is **`MN`**. The Central Server lives at **cs.gerege.mn*
 │   ├───────────────────────────┴───────────────────────────────────────┤     │
 │   │ Member: Gerege Smart Metering (COM/7181609)  ss.paygrid.mn        │     │
 │   │   REGISTERED on CS 2026-05-06; PAYGRID-SS-1; brand domain         │     │
-│   │   paygrid.mn; subsystem TBD; direct public IP (no NAT).           │     │
+│   │   paygrid.mn; subsystem PAYGRID-CORE registered 2026-05-07.       │     │
 │   └───────────────────────────────────────────────────────────────────┘     │
 │                                                                             │
 │   Information system behind GEREGE-ID:                                      │
