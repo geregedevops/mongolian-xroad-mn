@@ -372,14 +372,36 @@ the `clientReg` itself never used that path because it is wrapped in
 an X-Road peer message and only mgmt SS opens a TCP connection to
 CS:4002.
 
-## Open loops (Phase 3)
+## 2026-05-07 — Service-client grant on `EIDMONGOL` (NOT GEREGE-ID)
 
-1. **Service-client grants on rp.gerege.mn** — ask Gerege Systems
-   LLC to add `MN/COM/7181609/PAYGRID-CORE` to the access list of
-   `auth-svc`, `sign-svc`, `cert-svc` on `GEREGE-ID` (rp.gerege.mn UI
-   → Clients → GEREGE-ID → Services → expand each service → Add
-   subjects). Until then every paygrid call to GEREGE-ID is denied
-   with `Service-clients ACL denied`.
+Gerege Systems LLC opsadmin added `MN/COM/7181609/PAYGRID-CORE` to
+the access list of `auth-svc` + `sign-svc` on
+`MN/COM/6235972/EIDMONGOL` (rp.gerege.mn UI → Clients → EIDMONGOL →
+Services → expand each operation → Add subjects). Visible in
+rp.gerege.mn `serverconf.accessright` with `rightsgiven =
+2026-05-07 09:55:27.33`.
+
+**Important framing correction.** The early ss.paygrid.mn drafts
+assumed paygrid would consume `GEREGE-ID` (the legacy stack on
+ca.gerege.mn). The operator clarified mid-session that paygrid will
+use **e-ID Mongolia v2** instead — the newer subsystem on the same
+rp.gerege.mn SS, backed by `api.eidmongol.mn`. The grant correctly
+landed on `EIDMONGOL`, not `GEREGE-ID`. All other v2 consumers
+follow the same pattern (auth-svc + sign-svc, no cert-svc) — see
+the full ACL in `rp.gerege.mn/README.md`.
+
+**Why `cert-svc` is omitted in v2.** GEREGE-ID v1 exposed
+`POST /certificate/validate` and
+`GET /certificate/lookup/{national_id}`. The v2 stack folds those
+into the auth callback (the IS receives the validated user info as
+part of the auth-flow result), which removes the bulk-lookup
+harvest surface. Don't request `cert-svc` for new v2 consumers
+unless there's a specific use case the auth callback can't satisfy.
+
+## Open loops (Phase 3 — remaining)
+
+1. ~~Service-client grants on rp.gerege.mn~~ ✅ done — see entry
+   above. EIDMONGOL auth-svc + sign-svc granted to PAYGRID-CORE.
 2. **PAYGRID-CORE Internal Servers connection type** — defaults to
    HTTPS-with-cert. If paygrid IS calls this SS over plain HTTP from
    inside its own docker network, switch to `HTTP` to avoid the

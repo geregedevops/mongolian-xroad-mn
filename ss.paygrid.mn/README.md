@@ -55,12 +55,13 @@ detailed log. Summary of the steps and where each one ended up:
 
 ### Phase 3 — what still needs operator decisions
 
-1. **What services will paygrid consume?** If GEREGE-ID auth/sign/cert,
-   ask Gerege Systems LLC to grant `MN/COM/7181609/PAYGRID-CORE` as a
-   service client on rp.gerege.mn → GEREGE-ID services tab. Until that
-   ACL is added, every `auth-svc/sign-svc/cert-svc` call from
-   `ss.paygrid.mn` is denied at rp.gerege.mn with `Service-clients ACL
-   denied`.
+1. **Service-client grant on `EIDMONGOL`** ✅ done 2026-05-07 — Gerege
+   Systems LLC granted `MN/COM/7181609/PAYGRID-CORE` access to
+   `auth-svc` + `sign-svc` on `MN/COM/6235972/EIDMONGOL` (e-ID
+   Mongolia v2, IS = `api.eidmongol.mn`). **NOT GEREGE-ID** — paygrid
+   uses the v2 stack, matches the pattern of the other 7 v2
+   consumers (CONTRACT-MN, GEREGE-WALLET-BFF, GEREGE-EDU, TASKER,
+   BANK1/2/3-DBANK). `cert-svc` deliberately omitted in v2.
 2. **What services will paygrid publish?** If smart-metering APIs, host
    the OpenAPI3 description on a public TLS endpoint (mirror the
    `https://ca.gerege.mn/xroad/openapi/...` pattern), wire UI →
