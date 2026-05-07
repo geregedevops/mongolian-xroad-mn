@@ -398,6 +398,54 @@ part of the auth-flow result), which removes the bulk-lookup
 harvest surface. Don't request `cert-svc` for new v2 consumers
 unless there's a specific use case the auth callback can't satisfy.
 
+## 2026-05-07 — Added to `monitor.x-road.mn` Prometheus stack
+
+Same-day onboarding of this SS into the existing observability stack
+at `monitor.x-road.mn` (see `reference_xroad_monitor.md`):
+
+1. **node_exporter on ss.paygrid.mn**:
+   `apt install -y prometheus-node-exporter` — Ubuntu archive only,
+   no NIIS download needed.
+   Listens on `*:9100`, systemd unit `prometheus-node-exporter`
+   active.
+2. **UFW** on ss.paygrid.mn:
+   `ufw allow from 38.180.242.76 to any port 9100/tcp` — source-pinned
+   to the monitor host. Standard pattern (cs/mgmt/rp/gerege.mn/
+   timeserver all use the same source-pin).
+3. **prometheus.yml** on `x-road.mn:/opt/xroad-monitor/`:
+   - `xroad-nodes` job: added `ss.paygrid.mn:9100` with labels
+     `{ role: member-ss, host: ss.paygrid.mn,
+        member: gerege-smart-metering }`. The `member: ...` label is
+     new — first SS where it's worth distinguishing the owner since
+     paygrid is the first non-Gerege-Systems / non-Gerege-Core
+     member SS in this instance.
+   - `xroad-tcp-probe` job: added `ss.paygrid.mn:5500` and
+     `ss.paygrid.mn:5577` (parity with mgmt / rp / ss.gerege.mn).
+   - File rewritten end-to-end via heredoc, NOT `sed -i` — the
+     monitor memory specifically warns about an indent-corruption
+     incident from in-place sed on this YAML.
+   - Backup left at `/opt/xroad-monitor/prometheus.yml.bak.*`.
+4. **Validate + reload**:
+   ```
+   docker exec xr-prometheus promtool check config /etc/prometheus/prometheus.yml
+   docker kill -s HUP xr-prometheus
+   ```
+   `promtool` reported the config valid (1 rule file, 13 rules).
+5. **Verify targets**:
+   ```
+   xroad-nodes      ss.paygrid.mn:9100  health=up
+   xroad-tcp-probe  ss.paygrid.mn:5500  health=up
+   xroad-tcp-probe  ss.paygrid.mn:5577  health=unknown (first cycle, becomes up)
+   ```
+   Unlike `ss.gerege.mn` this host is NOT behind NAT — direct
+   public IP, no autossh tunnel. Prometheus scrapes directly on
+   `ss.paygrid.mn:9100` over the internet, gated by the UFW
+   source-pin on the SS side.
+
+No alert-rule changes needed — the existing `xroad-host-health` and
+`xroad-service-health` groups in `/opt/xroad-monitor/alerts/xroad.yml`
+match by job, so the new target is automatically covered.
+
 ## Open loops (Phase 3 — remaining)
 
 1. ~~Service-client grants on rp.gerege.mn~~ ✅ done — see entry
