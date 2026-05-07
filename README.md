@@ -52,7 +52,8 @@ mongolian-xroad-mn/
 ├── rp.gerege.mn/              Producer SS publishing GEREGE-ID auth/sign/cert services
 ├── ss.gerege.mn/              Consumer SS owning the TEST-DEMO subsystem (Gerege Core LLC)
 ├── ss.paygrid.mn/             Member SS for Paygrid LLC (xroad-securityserver 7.8.0, wizard pending)
-├── gerege.mn/                 CA + OCSP + CRL + sign portal + X-Road IS for GEREGE-ID
+├── ca.gerege.mn/              CA + OCSP + CRL + sign portal + X-Road IS for GEREGE-ID
+│                              (vhosts: gerege.mn, ca., ocsp., crl., sign. on 38.180.136.97)
 └── timeserver.mn/             RFC 3161 timestamping authority (Sigstore TSA, Gerege-rooted)
 ```
 
@@ -78,3 +79,7 @@ Each per-server folder has its own `README.md` describing the role, the ports it
 - API tokens for `[management-service]` / `[registration-service]` in CS `local.ini`.
 
 The operator's local memory store (under `~/.claude/.../memory/reference_cs_secrets.md`) records *where* each secret lives so it can be retrieved with `ssh + sudo` when needed.
+
+## Sister repos
+
+- [`gerege-mn-public`](https://github.com/geregedevops/gerege-mn-public) — public landing pages (e-id.mn, x-road.mn, template.gerege.mn), the full-stack eID/X-Road demo (test.gerege.mn), and the `gerege-doc-toolkit/` Markdown → branded `.docx` document toolkit used to render every PDF/Word artefact this monorepo produces.
