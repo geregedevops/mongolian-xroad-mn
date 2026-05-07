@@ -67,11 +67,13 @@ detailed log. Summary of the steps and where each one ended up:
    `https://ca.gerege.mn/xroad/openapi/...` pattern), wire UI →
    Services → Add REST → OpenAPI 3 Description on the PAYGRID-CORE
    subsystem.
-3. **Internal Servers connection type** — once paygrid IS host is
-   chosen, set `HTTP` (plain) or `HTTPS` (TLS) on PAYGRID-CORE based
-   on how the IS calls this SS. Same trap that bit ss.gerege.mn
-   TEST-DEMO on 2026-04-19 (HTTPS by default, IS called over HTTP →
-   `Client specifies HTTPS but did not supply TLS certificate`).
+3. ~~Internal Servers connection type~~ ✅ done 2026-05-07 — kept at
+   the NIIS-default `HTTPS` (mTLS). IS host = `paygrid.mn`
+   (`38.180.254.229`); ECDSA P-256 client cert generated at
+   `paygrid.mn:/etc/paygrid/xroad-is-tls/`, leaf uploaded to SS
+   under PAYGRID-CORE → Internal Servers → Information system TLS
+   certificates. UFW `8443/tcp` source-pinned to the IS host only.
+   See HISTORY for the cert fingerprint + curl test command.
 4. **Add to monitor.x-road.mn** — install `prometheus-node-exporter`,
    add UFW rule allowing `38.180.242.76` to `:9100`, append target to
    `/opt/xroad-monitor/prometheus.yml` `xroad-nodes` job. Same pattern

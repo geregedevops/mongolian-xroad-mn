@@ -446,6 +446,96 @@ No alert-rule changes needed — the existing `xroad-host-health` and
 `xroad-service-health` groups in `/opt/xroad-monitor/alerts/xroad.yml`
 match by job, so the new target is automatically covered.
 
+## 2026-05-07 — IS↔SS mTLS set up per NIIS world-standard pattern
+
+`PAYGRID-CORE` Internal Servers → Connection Type stayed at the
+NIIS default **`HTTPS`** (mutual-TLS). Following the canonical
+NIIS UG-SS guidance and the Estonian RIA / Suomi.fi pattern: any
+IS-to-SS connection that crosses a host boundary should be
+mTLS-encrypted, with the IS authenticating itself via a TLS client
+certificate that the SS holds in its pinned-cert list.
+
+The Mongolian-X-Road precedent here is `ss.gerege.mn` /
+`TEST-DEMO` — but that one was **deliberately downgraded** to
+plain HTTP on port 80 because `test.gerege.mn` calls the SS from
+inside its own docker network on the same physical host (HISTORY
+2026-04-19). For paygrid the IS sits on a different VM
+(`paygrid.mn`, 38.180.254.229) so the same downgrade is not
+appropriate.
+
+### IS client cert (paygrid.mn)
+
+Generated on the IS host and stored at
+`/etc/paygrid/xroad-is-tls/`:
+
+```
+paygrid-is-client.key   ECDSA P-256, mode 0600 root:root
+paygrid-is-client.crt   self-signed leaf, CA:FALSE, EKU=clientAuth
+                        CN=paygrid.mn-is-client
+                        O=Gerege Smart Metering, C=MN, serialNumber=7181609
+                        SAN=DNS:paygrid.mn
+                        validity 2026-05-07 → 2031-05-06 (5 years)
+                        SHA256 fingerprint:
+                          B0:6C:EB:CB:A8:2B:4D:CE:A8:FC:EA:11:B0:2D:D0:9B:FF:4D:5C:20:F2:08:31:3A:A2:0A:4A:A6:59:FB:66:9F
+```
+
+NIIS pins the cert by **exact bytes match**, not chain validation
+— self-signed leaf is correct (a CA chain would just be checked
+for the leaf hash anyway). EKU `clientAuth` and CA:FALSE are still
+set for cert hygiene and to satisfy strict TLS client libraries
+that reject `CA:TRUE` leaves.
+
+### SS-side configuration
+
+1. **Upload** the leaf cert via UI → Clients → `PAYGRID-CORE` →
+   Internal Servers tab → Information system TLS certificates →
+   Add → upload `paygrid-is-client.crt`. Verify the displayed
+   SHA256 fingerprint matches `B0:6C:EB:…:69`.
+2. **Connection type** stays at `HTTPS` (default — equals "mTLS
+   required" in NIIS terminology).
+3. **UFW** on ss.paygrid.mn: `ufw allow from 38.180.254.229 to any
+   port 8443 proto tcp`. Source-pinned to the IS host only — even
+   with mTLS we don't expose the consumer-REST gateway to the open
+   internet.
+
+```
+$ ufw status numbered (paygrid SS)
+[5] 8443/tcp  ALLOW IN  38.180.254.229  # paygrid.mn IS client
+```
+
+### IS-side wiring (Phase 4 — paygrid backend team)
+
+The paygrid Go backend (`/opt/paygrid-mn/paygrid-go/`) makes outbound
+X-Road calls for EIDMONGOL auth + sign. Its HTTP client must
+present the client cert + key when calling
+`https://ss.paygrid.mn:8443/r1/MN/COM/6235972/EIDMONGOL/...`.
+
+Reference test (manual):
+```bash
+curl --cert /etc/paygrid/xroad-is-tls/paygrid-is-client.crt \
+     --key  /etc/paygrid/xroad-is-tls/paygrid-is-client.key \
+     -k \
+     -H 'X-Road-Client: MN/COM/7181609/PAYGRID-CORE' \
+     https://ss.paygrid.mn:8443/r1/MN/COM/6235972/EIDMONGOL/listMethods
+```
+
+`listMethods` is the NIIS universal X-Road metaservice — returns
+the list of services that the target subsystem publishes
+(`auth-svc`, `sign-svc` for EIDMONGOL). HTTP 200 + JSON =
+mTLS + ACL + X-Road routing all working.
+
+### Why no SS→IS cert upload on the producer direction (yet)
+
+When/if PAYGRID-CORE starts publishing services (e.g. payment
+APIs back to partner banks), the SS must validate the IS server
+cert when forwarding inbound X-Road requests to
+`https://paygrid.mn/v1/...`. paygrid.mn runs Let's Encrypt for
+its public TLS, and Java's default truststore already trusts LE,
+so no extra "Internal Servers → Information System TLS server
+certificate" upload is needed for the producer flow. Compare to
+`rp.gerege.mn` which has the LE cert for `ca.gerege.mn` already
+trusted by the same pathway.
+
 ## Open loops (Phase 3 — remaining)
 
 1. ~~Service-client grants on rp.gerege.mn~~ ✅ done — see entry
